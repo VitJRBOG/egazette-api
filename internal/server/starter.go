@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	config "bitbucket.org/VitJRBOG/rss_maker/internal/config"
-	db "bitbucket.org/VitJRBOG/rss_maker/internal/db"
+	config "github.com/VitJRBOG/RSSMaker/internal/config"
+	db "github.com/VitJRBOG/RSSMaker/internal/db"
 	mux "github.com/gorilla/mux"
 )
 

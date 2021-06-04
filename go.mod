@@ -1,4 +1,4 @@
-module bitbucket.org/VitJRBOG/rss_maker
+module github.com/VitJRBOG/RSSMaker
 
 go 1.16
 

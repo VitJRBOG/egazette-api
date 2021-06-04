@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	rss "bitbucket.org/VitJRBOG/rss_maker/internal/rss"
-	vkapi "bitbucket.org/VitJRBOG/rss_maker/internal/vk/api"
+	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
+	vkapi "github.com/VitJRBOG/RSSMaker/internal/vk/api"
 )
 
 func ComposeRSS(community vkapi.Community, wallPosts []vkapi.WallPost) (rss.RSS, error) {

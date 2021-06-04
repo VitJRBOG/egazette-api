@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strconv"
 
-	db "bitbucket.org/VitJRBOG/rss_maker/internal/db"
-	vkapi "bitbucket.org/VitJRBOG/rss_maker/internal/vk/api"
-	vkcollector "bitbucket.org/VitJRBOG/rss_maker/internal/vk/collector"
+	db "github.com/VitJRBOG/RSSMaker/internal/db"
+	vkapi "github.com/VitJRBOG/RSSMaker/internal/vk/api"
+	vkcollector "github.com/VitJRBOG/RSSMaker/internal/vk/collector"
 )
 
 func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
