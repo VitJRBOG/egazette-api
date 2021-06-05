@@ -32,12 +32,8 @@ func ComposeRSS(community vkapi.Community, wallPosts []vkapi.WallPost) (rss.RSS,
 					continue
 				}
 
-				// FIXME: нужно указывать прямую ссылку на фото
-				// c https://sun1-87.userapi.com и прочим,
-				// иначе ридер ее не видит
-				rssItem.Enclosure.URL = fmt.Sprintf("https://vk.com/photo%d_%d",
-					attachment.Photo.OwnerID, attachment.Photo.ID)
-				rssItem.Enclosure.Type = "image/jpeg"
+				rssItem.Description = fmt.Sprintf("<img src=\"%s\">\n%s",
+					getMaxSizePhotoURL(attachment.Photo), rssItem.Description)
 			}
 		}
 
@@ -81,4 +77,16 @@ func getDateInReadableFormat(ts int64) (string, error) {
 	t := time.Unix(ts, 0).In(loc)
 	dateFormat := "Mon, Jan 2 2006 15:04:05 -0700"
 	return t.Format(dateFormat), nil
+}
+
+func getMaxSizePhotoURL(photo vkapi.PhotoAttachment) string {
+	maxWidth := 0
+	maxHeight := 0
+	url := ""
+	for _, size := range photo.Sizes {
+		if size.Width > maxWidth && size.Height > maxHeight {
+			url = size.URL
+		}
+	}
+	return url
 }

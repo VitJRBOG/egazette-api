@@ -35,6 +35,11 @@ type PhotoAttachment struct {
 	Date      int    `json:"date"`
 	Text      string `json:"text"`
 	AccessKey string `json:"access_key"`
+	Sizes     []struct {
+		Height int    `json:"height"`
+		Width  int    `json:"width"`
+		URL    string `json:"url"`
+	} `json:"sizes"`
 }
 
 type VideoAttachment struct {
