@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 	"runtime/debug"
@@ -31,4 +32,24 @@ func runHandling(rtr *mux.Router, dbase *sql.DB) {
 			rw.Write(data)
 		}
 	}).Methods("GET", "POST")
+
+	rtr.HandleFunc("/addRSSSource", func(rw http.ResponseWriter, r *http.Request) {
+		var vkRSSSource VKRSSSource
+		err := json.NewDecoder(r.Body).Decode(&vkRSSSource)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			log.Printf("%s\n%s\n", err.Error(), debug.Stack())
+		} else {
+			data, err := addVKRSSSource(dbase, vkRSSSource)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				log.Printf("%s\n%s\n", err.Error(), debug.Stack())
+			} else {
+				rw.Header().Set("Content-Type", "application/json")
+				rw.Write(data)
+			}
+		}
+
+		defer r.Body.Close()
+	}).Methods("POST")
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"net/url"
@@ -67,6 +68,40 @@ func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
 	}
 
 	data, err := xml.Marshal(rssFeed)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+type VKRSSSource struct {
+	SourceName    string `json:"source_name"`
+	URL           string `json:"url"`
+	VKAccessToken string `json:"access_token"`
+	VKID          int    `json:"vk_id"`
+}
+
+func addVKRSSSource(dbase *sql.DB, vkRSSSource VKRSSSource) ([]byte, error) {
+	var feed = db.Feed{
+		SourceName: vkRSSSource.SourceName,
+		URL:        vkRSSSource.URL,
+	}
+	var vkAccess = db.VKAccess{
+		AccessToken: vkRSSSource.VKAccessToken,
+		VKID:        vkRSSSource.VKID,
+	}
+
+	feed, vkAccess, err := db.AddNewVKSource(feed, vkAccess, dbase)
+	if err != nil {
+		return nil, err
+	}
+
+	var values = map[string]interface{}{
+		"feed_id": feed.ID,
+	}
+
+	data, err := json.Marshal(values)
 	if err != nil {
 		return nil, err
 	}

@@ -161,3 +161,44 @@ func (v *VKAccess) SelectFrom(dbase *sql.DB) ([]VKAccess, error) {
 
 	return vkAccesses, nil
 }
+
+func AddNewVKSource(f Feed, v VKAccess, dbase *sql.DB) (Feed, VKAccess, error) {
+	tx, err := dbase.Begin()
+	if err != nil {
+		return Feed{}, VKAccess{}, err
+	}
+
+	insertIntoFeed := "INSERT INTO feed(source_name, url) VALUES(?, ?)"
+
+	resultFeed, err := tx.Exec(insertIntoFeed, f.SourceName, f.URL)
+	if err != nil {
+		return Feed{}, VKAccess{}, err
+	}
+
+	feedID, err := resultFeed.LastInsertId()
+	if err != nil {
+		return Feed{}, VKAccess{}, err
+	}
+
+	insertIntoVkAccess := "INSERT INTO vk_access(feed_id, access_token, vk_id) VALUES(?, ?, ?)"
+
+	vkAccessResult, err := tx.Exec(insertIntoVkAccess, feedID, v.AccessToken, v.VKID)
+	if err != nil {
+		return Feed{}, VKAccess{}, err
+	}
+
+	vkAccessID, err := vkAccessResult.LastInsertId()
+	if err != nil {
+		return Feed{}, VKAccess{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return Feed{}, VKAccess{}, err
+	}
+
+	f.ID = int(feedID)
+	v.ID = int(vkAccessID)
+
+	return f, v, nil
+}
