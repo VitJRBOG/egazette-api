@@ -2,6 +2,7 @@ package collector
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
@@ -13,13 +14,14 @@ func ComposeRSS(community vkapi.Community, wallPosts []vkapi.WallPost) (rss.RSS,
 
 	r.Channel.Title = community.Name
 	r.Channel.Link = "https://vk.com/" + community.ScreenName
-	r.Channel.Description = community.Description
+	r.Channel.Description = strings.ReplaceAll(community.Description, "\n", "<br>")
 
 	for _, wallPost := range wallPosts {
 		var rssItem rss.Item
 
 		rssItem.Title = getWallPostTitle(wallPost.Text)
-		rssItem.Description = wallPost.Text
+		rssItem.Description = strings.ReplaceAll(wallPost.Text, "\n", "<br>")
+
 		var err error
 		rssItem.Date, err = getDateInReadableFormat(int64(wallPost.Date))
 		if err != nil {
