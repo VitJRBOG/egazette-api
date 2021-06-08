@@ -87,6 +87,35 @@ func (s *Source) SelectFrom(dbase *sql.DB) ([]Source, error) {
 	return sources, nil
 }
 
+func (s *Source) InsertInto(query string, dbase *sql.DB, tx *sql.Tx) (int, error) {
+	var id int64
+
+	switch {
+	case dbase == nil && tx != nil:
+		result, err := tx.Exec(query, s.Name, s.URL)
+		if err != nil {
+			return 0, err
+		}
+
+		id, err = result.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+	case tx == nil && dbase != nil:
+		result, err := dbase.Exec(query, s.Name, s.URL)
+		if err != nil {
+			return 0, err
+		}
+
+		id, err = result.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return int(id), nil
+}
+
 type VKAccess struct {
 	ID          int
 	SourceID    int
@@ -162,6 +191,35 @@ func (v *VKAccess) SelectFrom(dbase *sql.DB) ([]VKAccess, error) {
 	return vkAccesses, nil
 }
 
+func (v *VKAccess) InsertInto(query string, dbase *sql.DB, tx *sql.Tx) (int, error) {
+	var id int64
+
+	switch {
+	case dbase == nil && tx != nil:
+		result, err := tx.Exec(query, v.SourceID, v.AccessToken, v.VKID)
+		if err != nil {
+			return 0, err
+		}
+
+		id, err = result.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+	case tx == nil && dbase != nil:
+		result, err := dbase.Exec(query, v.SourceID, v.AccessToken, v.VKID)
+		if err != nil {
+			return 0, err
+		}
+
+		id, err = result.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return int(id), nil
+}
+
 func AddNewVKSource(s Source, v VKAccess, dbase *sql.DB) (Source, VKAccess, error) {
 	tx, err := dbase.Begin()
 	if err != nil {
@@ -170,35 +228,27 @@ func AddNewVKSource(s Source, v VKAccess, dbase *sql.DB) (Source, VKAccess, erro
 
 	insertIntoFeed := "INSERT INTO source(name, url) VALUES(?, ?)"
 
-	resultFeed, err := tx.Exec(insertIntoFeed, s.Name, s.URL)
+	feedID, err := s.InsertInto(insertIntoFeed, nil, tx)
 	if err != nil {
 		return Source{}, VKAccess{}, err
 	}
 
-	feedID, err := resultFeed.LastInsertId()
-	if err != nil {
-		return Source{}, VKAccess{}, err
-	}
+	s.ID = feedID
+	v.SourceID = feedID
 
 	insertIntoVkAccess := "INSERT INTO vk_access(source_id, access_token, vk_id) VALUES(?, ?, ?)"
 
-	vkAccessResult, err := tx.Exec(insertIntoVkAccess, feedID, v.AccessToken, v.VKID)
+	vkAccessID, err := v.InsertInto(insertIntoVkAccess, nil, tx)
 	if err != nil {
 		return Source{}, VKAccess{}, err
 	}
 
-	vkAccessID, err := vkAccessResult.LastInsertId()
-	if err != nil {
-		return Source{}, VKAccess{}, err
-	}
+	v.ID = vkAccessID
 
 	err = tx.Commit()
 	if err != nil {
 		return Source{}, VKAccess{}, err
 	}
-
-	s.ID = int(feedID)
-	v.ID = int(vkAccessID)
 
 	return s, v, nil
 }
