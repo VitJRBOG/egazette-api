@@ -16,7 +16,7 @@ func runHandling(rtr *mux.Router, dbase *sql.DB) {
 		rw.Write([]byte("Hello world!"))
 	}).Methods("GET", "POST")
 
-	rtr.HandleFunc("/getRSSFeed/{id:[0-9]}", func(rw http.ResponseWriter, r *http.Request) {
+	rtr.HandleFunc("/getRSSFeed/{id:[0-9]+}", func(rw http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(mux.Vars(r)["id"])
 		if err != nil {
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
