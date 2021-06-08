@@ -14,21 +14,21 @@ import (
 )
 
 func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
-	var feed = db.Feed{
+	var source = db.Source{
 		ID: id,
 	}
 
-	feeds, err := feed.SelectFrom(dbase)
+	feeds, err := source.SelectFrom(dbase)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(feeds) == 0 {
-		return nil, fmt.Errorf("feed with the id = %d was not found", id)
+		return nil, fmt.Errorf("source with the id = %d was not found", id)
 	}
 
 	var vkAccess = db.VKAccess{
-		FeedID: feed.ID,
+		SourceID: source.ID,
 	}
 
 	vkAccesses, err := vkAccess.SelectFrom(dbase)
@@ -37,7 +37,7 @@ func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
 	}
 
 	if len(vkAccesses) == 0 {
-		return nil, fmt.Errorf("access token for feed \"%s\" was not found", feed.SourceName)
+		return nil, fmt.Errorf("access token for source \"%s\" was not found", source.Name)
 	}
 
 	community, err := vkapi.GetCommunityInfo(url.Values{
@@ -83,22 +83,22 @@ type VKRSSSource struct {
 }
 
 func addVKRSSSource(dbase *sql.DB, vkRSSSource VKRSSSource) ([]byte, error) {
-	var feed = db.Feed{
-		SourceName: vkRSSSource.SourceName,
-		URL:        vkRSSSource.URL,
+	var source = db.Source{
+		Name: vkRSSSource.SourceName,
+		URL:  vkRSSSource.URL,
 	}
 	var vkAccess = db.VKAccess{
 		AccessToken: vkRSSSource.VKAccessToken,
 		VKID:        vkRSSSource.VKID,
 	}
 
-	feed, vkAccess, err := db.AddNewVKSource(feed, vkAccess, dbase)
+	source, vkAccess, err := db.AddNewVKSource(source, vkAccess, dbase)
 	if err != nil {
 		return nil, err
 	}
 
 	var values = map[string]interface{}{
-		"feed_id": feed.ID,
+		"feed_id": source.ID,
 	}
 
 	data, err := json.Marshal(values)

@@ -23,43 +23,43 @@ func Connect(connectionData config.DBConn) (*sql.DB, error) {
 	return db, nil
 }
 
-type Feed struct {
-	ID         int
-	SourceName string
-	URL        string
+type Source struct {
+	ID   int
+	Name string
+	URL  string
 }
 
-func (f *Feed) SelectFrom(dbase *sql.DB) ([]Feed, error) {
-	query := "SELECT * FROM feed"
+func (s *Source) SelectFrom(dbase *sql.DB) ([]Source, error) {
+	query := "SELECT * FROM source"
 
 	var values []interface{}
 
-	if f.ID != 0 {
+	if s.ID != 0 {
 		query += " WHERE id = ?"
-		values = append(values, f.ID)
+		values = append(values, s.ID)
 	}
 
-	if f.SourceName != "" {
+	if s.Name != "" {
 		if strings.Contains(query, "WHERE") {
-			query += "AND source_name = ?"
+			query += "AND name = ?"
 		} else {
-			query += " WHERE source_name = ?"
+			query += " WHERE name = ?"
 		}
-		values = append(values, f.SourceName)
+		values = append(values, s.Name)
 	}
 
-	if f.URL != "" {
+	if s.URL != "" {
 		if strings.Contains(query, "WHERE") {
 			query += "AND url = ?"
 		} else {
 			query += " WHERE url = ?"
 		}
-		values = append(values, f.URL)
+		values = append(values, s.URL)
 	}
 
 	rows, err := dbase.Query(query, values...)
 	if err != nil {
-		return []Feed{}, err
+		return []Source{}, err
 	}
 	defer func() {
 		err := rows.Close()
@@ -68,28 +68,28 @@ func (f *Feed) SelectFrom(dbase *sql.DB) ([]Feed, error) {
 		}
 	}()
 
-	var feeds []Feed
+	var sources []Source
 
 	for rows.Next() {
-		var feed Feed
+		var source Source
 
-		if err := rows.Scan(&feed.ID, &feed.SourceName, &feed.URL); err != nil {
-			return []Feed{}, err
+		if err := rows.Scan(&source.ID, &source.Name, &source.URL); err != nil {
+			return []Source{}, err
 		}
 
-		feeds = append(feeds, feed)
+		sources = append(sources, source)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []Feed{}, err
+		return []Source{}, err
 	}
 
-	return feeds, nil
+	return sources, nil
 }
 
 type VKAccess struct {
 	ID          int
-	FeedID      int
+	SourceID    int
 	AccessToken string
 	VKID        int
 }
@@ -104,13 +104,13 @@ func (v *VKAccess) SelectFrom(dbase *sql.DB) ([]VKAccess, error) {
 		values = append(values, v.ID)
 	}
 
-	if v.FeedID != 0 {
+	if v.SourceID != 0 {
 		if strings.Contains(query, "WHERE") {
-			query += "AND feed_id = ?"
+			query += "AND source_id = ?"
 		} else {
-			query += " WHERE feed_id = ?"
+			query += " WHERE source_id = ?"
 		}
-		values = append(values, v.FeedID)
+		values = append(values, v.SourceID)
 	}
 
 	if v.AccessToken != "" {
@@ -147,7 +147,7 @@ func (v *VKAccess) SelectFrom(dbase *sql.DB) ([]VKAccess, error) {
 	for rows.Next() {
 		var vkAccess VKAccess
 
-		if err := rows.Scan(&vkAccess.ID, &vkAccess.FeedID,
+		if err := rows.Scan(&vkAccess.ID, &vkAccess.SourceID,
 			&vkAccess.AccessToken, &vkAccess.VKID); err != nil {
 			return []VKAccess{}, err
 		}
@@ -162,43 +162,43 @@ func (v *VKAccess) SelectFrom(dbase *sql.DB) ([]VKAccess, error) {
 	return vkAccesses, nil
 }
 
-func AddNewVKSource(f Feed, v VKAccess, dbase *sql.DB) (Feed, VKAccess, error) {
+func AddNewVKSource(s Source, v VKAccess, dbase *sql.DB) (Source, VKAccess, error) {
 	tx, err := dbase.Begin()
 	if err != nil {
-		return Feed{}, VKAccess{}, err
+		return Source{}, VKAccess{}, err
 	}
 
-	insertIntoFeed := "INSERT INTO feed(source_name, url) VALUES(?, ?)"
+	insertIntoFeed := "INSERT INTO source(name, url) VALUES(?, ?)"
 
-	resultFeed, err := tx.Exec(insertIntoFeed, f.SourceName, f.URL)
+	resultFeed, err := tx.Exec(insertIntoFeed, s.Name, s.URL)
 	if err != nil {
-		return Feed{}, VKAccess{}, err
+		return Source{}, VKAccess{}, err
 	}
 
 	feedID, err := resultFeed.LastInsertId()
 	if err != nil {
-		return Feed{}, VKAccess{}, err
+		return Source{}, VKAccess{}, err
 	}
 
-	insertIntoVkAccess := "INSERT INTO vk_access(feed_id, access_token, vk_id) VALUES(?, ?, ?)"
+	insertIntoVkAccess := "INSERT INTO vk_access(source_id, access_token, vk_id) VALUES(?, ?, ?)"
 
 	vkAccessResult, err := tx.Exec(insertIntoVkAccess, feedID, v.AccessToken, v.VKID)
 	if err != nil {
-		return Feed{}, VKAccess{}, err
+		return Source{}, VKAccess{}, err
 	}
 
 	vkAccessID, err := vkAccessResult.LastInsertId()
 	if err != nil {
-		return Feed{}, VKAccess{}, err
+		return Source{}, VKAccess{}, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return Feed{}, VKAccess{}, err
+		return Source{}, VKAccess{}, err
 	}
 
-	f.ID = int(feedID)
+	s.ID = int(feedID)
 	v.ID = int(vkAccessID)
 
-	return f, v, nil
+	return s, v, nil
 }
