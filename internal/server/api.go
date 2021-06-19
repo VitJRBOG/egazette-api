@@ -7,8 +7,12 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	db "github.com/VitJRBOG/RSSMaker/internal/db"
+	natgeocollector "github.com/VitJRBOG/RSSMaker/internal/natgeo/collector"
+	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/natgeo/parser"
+	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
 	vkapi "github.com/VitJRBOG/RSSMaker/internal/vk/api"
 	vkcollector "github.com/VitJRBOG/RSSMaker/internal/vk/collector"
 )
@@ -27,17 +31,40 @@ func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
 		return nil, fmt.Errorf("source with the id = %d was not found", id)
 	}
 
+	var rssFeed rss.RSS
+
+	if strings.Contains(feeds[0].URL, "vk.com") {
+		rssFeed, err = rssFromVk(dbase, source)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		rssFeed, err = rssFromSite(feeds[0])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	data, err := xml.Marshal(rssFeed)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func rssFromVk(dbase *sql.DB, source db.Source) (rss.RSS, error) {
 	var vkAccess = db.VKAccess{
 		SourceID: source.ID,
 	}
 
 	vkAccesses, err := vkAccess.SelectFrom(dbase)
 	if err != nil {
-		return nil, err
+		return rss.RSS{}, err
 	}
 
 	if len(vkAccesses) == 0 {
-		return nil, fmt.Errorf("access token for source \"%s\" was not found", source.Name)
+		return rss.RSS{}, fmt.Errorf("access token for source \"%s\" was not found", source.Name)
 	}
 
 	community, err := vkapi.GetCommunityInfo(url.Values{
@@ -48,7 +75,7 @@ func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
 		"lang":         {"1"},
 	})
 	if err != nil {
-		return nil, err
+		return rss.RSS{}, err
 	}
 
 	wallPosts, err := vkapi.GetWallPosts(url.Values{
@@ -59,20 +86,31 @@ func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
 		"v":            {"5.131"},
 	})
 	if err != nil {
-		return nil, err
+		return rss.RSS{}, err
 	}
 
 	rssFeed, err := vkcollector.ComposeRSS(community, wallPosts)
 	if err != nil {
-		return nil, err
+		return rss.RSS{}, err
 	}
 
-	data, err := xml.Marshal(rssFeed)
+	return rssFeed, nil
+}
+
+func rssFromSite(source db.Source) (rss.RSS, error) {
+	var articles []natgeoparser.Article
+
+	articles, err := natgeoparser.GetArticles(source.URL)
 	if err != nil {
-		return nil, err
+		return rss.RSS{}, err
 	}
 
-	return data, nil
+	rssFeed, err := natgeocollector.ComposeRSS(articles)
+	if err != nil {
+		return rss.RSS{}, err
+	}
+
+	return rssFeed, nil
 }
 
 type VKRSSSource struct {
