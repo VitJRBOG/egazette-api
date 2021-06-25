@@ -10,6 +10,11 @@ import (
 	"golang.org/x/net/html"
 )
 
+//
+// NOTE
+// Parser for https://www.nationalgeographic.com/pages/topic/latest-stories
+//
+
 type Article struct {
 	Link        string
 	Date        string
@@ -28,62 +33,30 @@ func GetArticles(u string) ([]Article, error) {
 		return []Article{}, err
 	}
 
-	externalTag := extractExternalTag(doc)
+	externalTag := findTag("FilterBar", doc).NextSibling
 
 	articles := composeArticles(externalTag)
 
 	return articles, nil
 }
 
-func extractExternalTag(doc *html.Node) *html.Node {
-	return getElementByClass(doc, "FrameBackgroundFull FrameBackgroundFull--grey")
+func findTag(tagName string, doc *html.Node) *html.Node {
+	return getElementByClass(doc, tagName)
 }
 
 func composeArticles(externalTag *html.Node) []Article {
 	var articles []Article
 
-	articles = extractTagAttributes(articles, externalTag)
-	// articles = extractBigTagAttrubites(articles, externalTag.NextSibling)
-	articles = extractTagAttributes(articles, externalTag.NextSibling.NextSibling)
-	articles = extractLastTagAttributes(articles, externalTag.NextSibling.NextSibling)
+	articles = extractTagAttributes(articles,
+		findTag("GridPromoTile__Row", externalTag.FirstChild))
+	articles = extractTagAttributes(articles,
+		findTag("GridPromoTile__Row", externalTag.FirstChild.NextSibling.NextSibling))
 
 	return articles
 }
 
 func extractTagAttributes(articles []Article, externalTag *html.Node) []Article {
-	commonTag := externalTag.FirstChild.NextSibling.FirstChild.FirstChild.FirstChild
-	for {
-		if commonTag == nil {
-			break
-		}
-		articleTag := commonTag.FirstChild.FirstChild.FirstChild
-		var a Article
-		a.composeInfo(articleTag)
-		articles = append(articles, a)
-
-		commonTag = commonTag.NextSibling
-	}
-	return articles
-}
-
-// func extractBigTagAttrubites(articles []Article, externalTag *html.Node) []Article {
-// 	articleURLTag := getElementByClass(externalTag, "AnchorLink BgImagePromo__Container__Text__Link")
-// 	if articleURLTag != nil {
-// 		articleTitleTag := articleURLTag.NextSibling.NextSibling
-
-// 		var a Article
-
-// 		// TODO: найти способ получать текст из тега <h2>
-// 		a.Title = fmt.Sprintf("%v", articleTitleTag)
-// 		a.Link = articleURLTag.Attr[5].Val
-// 		articles = append(articles, a)
-// 	}
-
-// 	return articles
-// }
-
-func extractLastTagAttributes(articles []Article, externalTag *html.Node) []Article {
-	commonTag := externalTag.FirstChild.NextSibling.FirstChild.NextSibling.FirstChild.FirstChild
+	commonTag := externalTag.FirstChild
 	for {
 		if commonTag == nil {
 			break
