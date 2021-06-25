@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,6 +27,61 @@ type Article struct {
 func (a *Article) composeInfo(articleTag *html.Node) {
 	a.Title = articleTag.Attr[2].Val
 	a.Link = articleTag.Attr[3].Val
+
+	doc, err := fetchHTMLNode(a.Link)
+	if err != nil {
+		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		return
+	}
+
+	a.extractDescription(doc)
+	a.extractPublicationDate(doc)
+}
+
+func (a *Article) extractDescription(doc *html.Node) {
+	tag := findTag("Article__Headline__Desc", doc)
+
+	var buf bytes.Buffer
+	w := io.Writer(&buf)
+	err := html.Render(w, tag)
+	if err != nil {
+		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		return
+	}
+
+	a.Description = buf.String()
+
+	i := strings.Index(a.Description, ">")
+	a.Date = string([]rune(a.Description)[i+1:])
+
+	i = strings.Index(a.Description, "<")
+	a.Date = string([]rune(a.Description)[:i])
+}
+
+func (a *Article) extractPublicationDate(doc *html.Node) {
+	tag := findTag("Byline__Meta Byline__Meta--publishDate", doc)
+
+	var buf bytes.Buffer
+	w := io.Writer(&buf)
+	err := html.Render(w, tag)
+	if err != nil {
+		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		return
+	}
+
+	a.Date = buf.String()
+
+	if len([]rune(a.Date)) <= 0 {
+		return
+	}
+
+	i := strings.Index(a.Date, ">")
+	a.Date = string([]rune(a.Date)[i+1:])
+
+	i = strings.Index(a.Date, "<")
+	a.Date = string([]rune(a.Date)[:i])
+
+	a.Date = strings.ReplaceAll(a.Date, "Published ", "")
 }
 
 func GetArticles(u string) ([]Article, error) {

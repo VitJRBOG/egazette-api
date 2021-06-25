@@ -1,6 +1,10 @@
 package collector
 
 import (
+	"log"
+	"runtime/debug"
+	"time"
+
 	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/natgeo/parser"
 	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
 )
@@ -27,9 +31,23 @@ func parseArticles(r rss.RSS, articles []natgeoparser.Article) rss.RSS {
 
 		rssItem.Title = article.Title
 		rssItem.Link = article.Link
+		rssItem.Description = article.Description
+		rssItem.Date = getDateInReadableFormat(article.Date)
 
 		r.Channel.Items = append(r.Channel.Items, rssItem)
 	}
 
 	return r
+}
+
+func getDateInReadableFormat(date string) string {
+	dateFormat := "January 2, 2006"
+	t, err := time.Parse(dateFormat, date)
+	if err != nil {
+		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		return ""
+	}
+
+	d := "Mon, Jan 2 2006 15:04:05 -0700"
+	return t.Format(d)
 }
