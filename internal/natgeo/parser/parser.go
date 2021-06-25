@@ -25,7 +25,7 @@ type Article struct {
 }
 
 func (a *Article) composeInfo(articleTag *html.Node) {
-	a.Title = articleTag.Attr[2].Val
+	a.extractTitle(articleTag)
 	a.Link = articleTag.Attr[3].Val
 
 	doc, err := fetchHTMLNode(a.Link)
@@ -36,6 +36,13 @@ func (a *Article) composeInfo(articleTag *html.Node) {
 
 	a.extractDescription(doc)
 	a.extractPublicationDate(doc)
+}
+
+func (a *Article) extractTitle(tag *html.Node) {
+	title := tag.Attr[2].Val
+	i := strings.LastIndex(title, ",")
+
+	a.Title = title[:i]
 }
 
 func (a *Article) extractDescription(doc *html.Node) {
