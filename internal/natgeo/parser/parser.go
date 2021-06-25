@@ -59,10 +59,10 @@ func (a *Article) extractDescription(doc *html.Node) {
 	a.Description = buf.String()
 
 	i := strings.Index(a.Description, ">")
-	a.Date = string([]rune(a.Description)[i+1:])
+	a.Description = a.Description[i+1:]
 
 	i = strings.Index(a.Description, "<")
-	a.Date = string([]rune(a.Description)[:i])
+	a.Description = a.Description[:i]
 }
 
 func (a *Article) extractPublicationDate(doc *html.Node) {
@@ -83,10 +83,10 @@ func (a *Article) extractPublicationDate(doc *html.Node) {
 	}
 
 	i := strings.Index(a.Date, ">")
-	a.Date = string([]rune(a.Date)[i+1:])
+	a.Date = a.Date[i+1:]
 
 	i = strings.Index(a.Date, "<")
-	a.Date = string([]rune(a.Date)[:i])
+	a.Date = a.Date[:i]
 
 	a.Date = strings.ReplaceAll(a.Date, "Published ", "")
 }
