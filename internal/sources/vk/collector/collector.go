@@ -6,7 +6,7 @@ import (
 	"time"
 
 	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
-	vkapi "github.com/VitJRBOG/RSSMaker/internal/vk/api"
+	vkapi "github.com/VitJRBOG/RSSMaker/internal/sources/vk/api"
 )
 
 func ComposeRSS(community vkapi.Community, wallPosts []vkapi.WallPost) (rss.RSS, error) {

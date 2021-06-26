@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	db "github.com/VitJRBOG/RSSMaker/internal/db"
-	natgeocollector "github.com/VitJRBOG/RSSMaker/internal/natgeo/collector"
-	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/natgeo/parser"
 	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
-	vkapi "github.com/VitJRBOG/RSSMaker/internal/vk/api"
-	vkcollector "github.com/VitJRBOG/RSSMaker/internal/vk/collector"
+	natgeocollector "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/collector"
+	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/parser"
+	vkapi "github.com/VitJRBOG/RSSMaker/internal/sources/vk/api"
+	vkcollector "github.com/VitJRBOG/RSSMaker/internal/sources/vk/collector"
 )
 
 func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
