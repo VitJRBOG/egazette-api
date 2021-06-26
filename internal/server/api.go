@@ -13,6 +13,8 @@ import (
 	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
 	natgeocollector "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/collector"
 	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/parser"
+	tgblogcollector "github.com/VitJRBOG/RSSMaker/internal/sources/tgblog/collector"
+	tgblogparser "github.com/VitJRBOG/RSSMaker/internal/sources/tgblog/parser"
 	vkapi "github.com/VitJRBOG/RSSMaker/internal/sources/vk/api"
 	vkcollector "github.com/VitJRBOG/RSSMaker/internal/sources/vk/collector"
 )
@@ -98,16 +100,31 @@ func rssFromVk(dbase *sql.DB, source db.Source) (rss.RSS, error) {
 }
 
 func rssFromSite(source db.Source) (rss.RSS, error) {
-	var articles []natgeoparser.Article
+	var rssFeed rss.RSS
 
-	articles, err := natgeoparser.GetArticles(source.URL)
-	if err != nil {
-		return rss.RSS{}, err
-	}
+	switch {
+	case strings.Contains(source.URL, "nationalgeographic"):
+		var articles []natgeoparser.Article
+		articles, err := natgeoparser.GetArticles(source.URL)
+		if err != nil {
+			return rss.RSS{}, err
+		}
 
-	rssFeed, err := natgeocollector.ComposeRSS(articles)
-	if err != nil {
-		return rss.RSS{}, err
+		rssFeed, err = natgeocollector.ComposeRSS(articles)
+		if err != nil {
+			return rss.RSS{}, err
+		}
+	case strings.Contains(source.URL, "telegram"):
+		var articles []tgblogparser.Article
+		articles, err := tgblogparser.GetArticles(source.URL)
+		if err != nil {
+			return rss.RSS{}, err
+		}
+
+		rssFeed, err = tgblogcollector.ComposeRSS(articles)
+		if err != nil {
+			return rss.RSS{}, err
+		}
 	}
 
 	return rssFeed, nil
