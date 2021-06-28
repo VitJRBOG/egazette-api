@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"fmt"
 	"log"
 	"runtime/debug"
 	"time"
@@ -31,7 +32,8 @@ func parseArticles(r rss.RSS, articles []tgblogparser.Article) rss.RSS {
 
 		rssItem.Title = article.Title
 		rssItem.Link = r.Channel.Link + article.Link
-		rssItem.Description = article.Description
+		rssItem.Description = fmt.Sprintf("<img src=\"%s\"><br>%s",
+			article.CoverURL, article.Description)
 		rssItem.Date = getDateInReadableFormat(article.Date)
 
 		r.Channel.Items = append(r.Channel.Items, rssItem)
