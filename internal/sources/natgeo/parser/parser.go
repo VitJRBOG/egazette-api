@@ -48,6 +48,10 @@ func (a *Article) extractTitle(tag *html.Node) {
 func (a *Article) extractDescription(doc *html.Node) {
 	tag := findTag("Article__Headline__Desc", doc)
 
+	if tag == nil {
+		return
+	}
+
 	var buf bytes.Buffer
 	w := io.Writer(&buf)
 	err := html.Render(w, tag)
