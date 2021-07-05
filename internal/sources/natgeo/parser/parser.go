@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/html"
 )
@@ -95,10 +96,10 @@ func (a *Article) extractPublicationDate(doc *html.Node) {
 	a.Date = strings.ReplaceAll(a.Date, "Published ", "")
 }
 
-func GetArticles(u string) ([]Article, error) {
+func GetArticles(u string) ([]*Article, error) {
 	doc, err := fetchHTMLNode(u)
 	if err != nil {
-		return []Article{}, err
+		return []*Article{}, err
 	}
 
 	externalTag := findTag("FilterBar", doc).NextSibling
@@ -112,18 +113,22 @@ func findTag(tagName string, doc *html.Node) *html.Node {
 	return getElementByClass(doc, tagName)
 }
 
-func composeArticles(externalTag *html.Node) []Article {
-	var articles []Article
+func composeArticles(externalTag *html.Node) []*Article {
+	var articles []*Article
+	var wg sync.WaitGroup
 
-	articles = extractTagAttributes(articles,
+	articles = extractTagAttributes(&wg, articles,
 		findTag("GridPromoTile__Row", externalTag.FirstChild))
-	articles = extractTagAttributes(articles,
+	articles = extractTagAttributes(&wg, articles,
 		findTag("GridPromoTile__Row", externalTag.FirstChild.NextSibling.NextSibling))
+
+	wg.Wait()
 
 	return articles
 }
 
-func extractTagAttributes(articles []Article, externalTag *html.Node) []Article {
+func extractTagAttributes(wg *sync.WaitGroup, articles []*Article,
+	externalTag *html.Node) []*Article {
 	commonTag := externalTag.FirstChild
 	for {
 		if commonTag == nil {
@@ -131,11 +136,16 @@ func extractTagAttributes(articles []Article, externalTag *html.Node) []Article 
 		}
 		articleTag := commonTag.FirstChild.FirstChild.FirstChild
 		var a Article
-		a.composeInfo(articleTag)
-		articles = append(articles, a)
+		articles = append(articles, &a)
+		wg.Add(1)
+		go func(a *Article) {
+			a.composeInfo(articleTag)
+			wg.Done()
+		}(&a)
 
 		commonTag = commonTag.NextSibling
 	}
+
 	return articles
 }
 

@@ -9,7 +9,7 @@ import (
 	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/parser"
 )
 
-func ComposeRSS(articles []natgeoparser.Article) (rss.RSS, error) {
+func ComposeRSS(articles []*natgeoparser.Article) (rss.RSS, error) {
 	var r rss.RSS
 
 	r = getSourceInfo(r)
@@ -25,7 +25,7 @@ func getSourceInfo(r rss.RSS) rss.RSS {
 	return r
 }
 
-func parseArticles(r rss.RSS, articles []natgeoparser.Article) rss.RSS {
+func parseArticles(r rss.RSS, articles []*natgeoparser.Article) rss.RSS {
 	for _, article := range articles {
 		var rssItem rss.Item
 

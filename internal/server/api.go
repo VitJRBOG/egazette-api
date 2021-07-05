@@ -104,7 +104,7 @@ func rssFromSite(source db.Source) (rss.RSS, error) {
 
 	switch {
 	case strings.Contains(source.URL, "nationalgeographic"):
-		var articles []natgeoparser.Article
+		var articles []*natgeoparser.Article
 		articles, err := natgeoparser.GetArticles(source.URL)
 		if err != nil {
 			return rss.RSS{}, err
