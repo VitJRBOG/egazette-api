@@ -5,8 +5,8 @@ import (
 	"runtime/debug"
 	"time"
 
-	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
-	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/parser"
+	rss "github.com/VitJRBOG/RSSFeeder/internal/rss"
+	natgeoparser "github.com/VitJRBOG/RSSFeeder/internal/sources/natgeo/parser"
 )
 
 func ComposeRSS(articles []*natgeoparser.Article) (rss.RSS, error) {

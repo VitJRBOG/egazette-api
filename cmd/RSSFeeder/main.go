@@ -4,8 +4,8 @@ import (
 	"log"
 	"runtime/debug"
 
-	config "github.com/VitJRBOG/RSSMaker/internal/config"
-	server "github.com/VitJRBOG/RSSMaker/internal/server"
+	config "github.com/VitJRBOG/RSSFeeder/internal/config"
+	server "github.com/VitJRBOG/RSSFeeder/internal/server"
 )
 
 func main() {

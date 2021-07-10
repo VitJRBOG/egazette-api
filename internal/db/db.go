@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	config "github.com/VitJRBOG/RSSMaker/internal/config"
+	config "github.com/VitJRBOG/RSSFeeder/internal/config"
 	_ "github.com/go-sql-driver/mysql"
 )
 

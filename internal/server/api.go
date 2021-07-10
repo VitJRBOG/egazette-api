@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"strings"
 
-	db "github.com/VitJRBOG/RSSMaker/internal/db"
-	rss "github.com/VitJRBOG/RSSMaker/internal/rss"
-	natgeocollector "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/collector"
-	natgeoparser "github.com/VitJRBOG/RSSMaker/internal/sources/natgeo/parser"
-	tgblogcollector "github.com/VitJRBOG/RSSMaker/internal/sources/tgblog/collector"
-	tgblogparser "github.com/VitJRBOG/RSSMaker/internal/sources/tgblog/parser"
-	vkapi "github.com/VitJRBOG/RSSMaker/internal/sources/vk/api"
-	vkcollector "github.com/VitJRBOG/RSSMaker/internal/sources/vk/collector"
+	db "github.com/VitJRBOG/RSSFeeder/internal/db"
+	rss "github.com/VitJRBOG/RSSFeeder/internal/rss"
+	natgeocollector "github.com/VitJRBOG/RSSFeeder/internal/sources/natgeo/collector"
+	natgeoparser "github.com/VitJRBOG/RSSFeeder/internal/sources/natgeo/parser"
+	tgblogcollector "github.com/VitJRBOG/RSSFeeder/internal/sources/tgblog/collector"
+	tgblogparser "github.com/VitJRBOG/RSSFeeder/internal/sources/tgblog/parser"
+	vkapi "github.com/VitJRBOG/RSSFeeder/internal/sources/vk/api"
+	vkcollector "github.com/VitJRBOG/RSSFeeder/internal/sources/vk/collector"
 )
 
 func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
