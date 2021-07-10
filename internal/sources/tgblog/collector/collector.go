@@ -28,13 +28,13 @@ func getSourceInfo(r rss.RSS) rss.RSS {
 
 func parseArticles(r rss.RSS, articles []tgblogparser.Article) rss.RSS {
 	for _, article := range articles {
-		var rssItem rss.Item
-
-		rssItem.Title = article.Title
-		rssItem.Link = r.Channel.Link + article.Link
-		rssItem.Description = fmt.Sprintf("<img src=\"%s\"><br>%s",
-			article.CoverURL, article.Description)
-		rssItem.Date = getDateInReadableFormat(article.Date)
+		var rssItem = rss.Item{
+			Title: article.Title,
+			Link:  r.Channel.Link + article.Link,
+			Description: fmt.Sprintf("<img src=\"%s\"><br>%s",
+				article.CoverURL, article.Description),
+			Date: getDateInReadableFormat(article.Date),
+		}
 
 		r.Channel.Items = append(r.Channel.Items, rssItem)
 	}

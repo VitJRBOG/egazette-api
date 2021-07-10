@@ -32,10 +32,11 @@ func parseCommunityInfo(r rss.RSS, community vkapi.Community) rss.RSS {
 
 func parseWallPosts(r rss.RSS, wallPosts []vkapi.WallPost) (rss.RSS, error) {
 	for _, wallPost := range wallPosts {
-		var rssItem rss.Item
-
-		rssItem.Title = getWallPostTitle(wallPost.Text)
-		rssItem.Description = strings.ReplaceAll(wallPost.Text, "\n", "<br>")
+		var rssItem = rss.Item{
+			Title:       getWallPostTitle(wallPost.Text),
+			Description: strings.ReplaceAll(wallPost.Text, "\n", "<br>"),
+			Link:        fmt.Sprintf("https://vk.com/wall%d_%d", wallPost.OwnerID, wallPost.ID),
+		}
 
 		var err error
 		rssItem.Date, err = getDateInReadableFormat(int64(wallPost.Date))
@@ -43,7 +44,6 @@ func parseWallPosts(r rss.RSS, wallPosts []vkapi.WallPost) (rss.RSS, error) {
 			return rss.RSS{}, err
 		}
 
-		rssItem.Link = fmt.Sprintf("https://vk.com/wall%d_%d", wallPost.OwnerID, wallPost.ID)
 		rssItem = parseWallPostAttachments(rssItem, wallPost)
 
 		r.Channel.Items = append(r.Channel.Items, rssItem)

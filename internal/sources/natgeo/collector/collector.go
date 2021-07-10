@@ -27,12 +27,12 @@ func getSourceInfo(r rss.RSS) rss.RSS {
 
 func parseArticles(r rss.RSS, articles []*natgeoparser.Article) rss.RSS {
 	for _, article := range articles {
-		var rssItem rss.Item
-
-		rssItem.Title = article.Title
-		rssItem.Link = article.Link
-		rssItem.Description = article.Description
-		rssItem.Date = getDateInReadableFormat(article.Date)
+		var rssItem = rss.Item{
+			Title:       article.Title,
+			Link:        article.Link,
+			Description: article.Description,
+			Date:        getDateInReadableFormat(article.Date),
+		}
 
 		r.Channel.Items = append(r.Channel.Items, rssItem)
 	}
