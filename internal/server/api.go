@@ -24,24 +24,30 @@ func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
 		ID: id,
 	}
 
-	feeds, err := source.SelectFrom(dbase)
+	sources, err := source.SelectFrom(dbase)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(feeds) == 0 {
+	if len(sources) == 0 {
 		return nil, fmt.Errorf("source with the id = %d was not found", id)
 	}
 
 	var rssFeed rss.RSS
 
-	if strings.Contains(feeds[0].URL, "vk.com") {
-		rssFeed, err = rssFromVk(dbase, source)
+	switch {
+	case strings.Contains(sources[0].URL, "vk.com"):
+		rssFeed, err = rssFromVk(dbase, sources[0])
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		rssFeed, err = rssFromSite(feeds[0])
+	case strings.Contains(sources[0].URL, "nationalgeographic.com"):
+		rssFeed, err = rssFromNationalGeographic(sources[0])
+		if err != nil {
+			return nil, err
+		}
+	case strings.Contains(sources[0].URL, "telegram.org"):
+		rssFeed, err = rssFromTelegramBlog(sources[0])
 		if err != nil {
 			return nil, err
 		}
@@ -99,32 +105,29 @@ func rssFromVk(dbase *sql.DB, source db.Source) (rss.RSS, error) {
 	return rssFeed, nil
 }
 
-func rssFromSite(source db.Source) (rss.RSS, error) {
-	var rssFeed rss.RSS
+func rssFromNationalGeographic(source db.Source) (rss.RSS, error) {
+	articles, err := natgeoparser.GetArticles(source.URL)
+	if err != nil {
+		return rss.RSS{}, err
+	}
 
-	switch {
-	case strings.Contains(source.URL, "nationalgeographic"):
-		var articles []*natgeoparser.Article
-		articles, err := natgeoparser.GetArticles(source.URL)
-		if err != nil {
-			return rss.RSS{}, err
-		}
+	rssFeed, err := natgeocollector.ComposeRSS(articles)
+	if err != nil {
+		return rss.RSS{}, err
+	}
 
-		rssFeed, err = natgeocollector.ComposeRSS(articles)
-		if err != nil {
-			return rss.RSS{}, err
-		}
-	case strings.Contains(source.URL, "telegram"):
-		var articles []tgblogparser.Article
-		articles, err := tgblogparser.GetArticles(source.URL)
-		if err != nil {
-			return rss.RSS{}, err
-		}
+	return rssFeed, nil
+}
 
-		rssFeed, err = tgblogcollector.ComposeRSS(articles)
-		if err != nil {
-			return rss.RSS{}, err
-		}
+func rssFromTelegramBlog(source db.Source) (rss.RSS, error) {
+	articles, err := tgblogparser.GetArticles(source.URL)
+	if err != nil {
+		return rss.RSS{}, err
+	}
+
+	rssFeed, err := tgblogcollector.ComposeRSS(articles)
+	if err != nil {
+		return rss.RSS{}, err
 	}
 
 	return rssFeed, nil
