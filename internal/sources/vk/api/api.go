@@ -128,7 +128,7 @@ func parseWallPosts(rawData []byte) ([]WallPost, error) {
 
 	err := json.Unmarshal(rawData, &data)
 	if err != nil {
-		return []WallPost{}, err
+		return []WallPost{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	if (data.Response.Error != Error{}) {
@@ -147,7 +147,7 @@ func parseUserInfo(rawData []byte) (User, error) {
 
 	err := json.Unmarshal(rawData, &data)
 	if err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	if (data.Error != Error{}) {
@@ -165,7 +165,7 @@ func parseCommunityInfo(rawData []byte) (Community, error) {
 
 	err := json.Unmarshal(rawData, &data)
 	if err != nil {
-		return Community{}, err
+		return Community{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	if (data.Error != Error{}) {
@@ -178,19 +178,19 @@ func parseCommunityInfo(rawData []byte) (Community, error) {
 func sendRequest(u string, values url.Values) ([]byte, error) {
 	response, err := http.PostForm(u, values)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	defer func() {
 		err := response.Body.Close()
 		if err != nil {
-			log.Printf("%s\n\n%s\n", err, debug.Stack())
+			log.Printf("\n%s\n%s", err, debug.Stack())
 		}
 	}()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 	return body, nil
 }

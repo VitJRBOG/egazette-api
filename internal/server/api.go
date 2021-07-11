@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"log"
+	"net/http"
 	"net/url"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -19,18 +22,25 @@ import (
 	vkcollector "github.com/VitJRBOG/RSSFeeder/internal/sources/vk/collector"
 )
 
-func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
+func getRSSFeed(dbase *sql.DB, id int) ([]byte, Error) {
 	var source = db.Source{
 		ID: id,
 	}
 
 	sources, err := source.SelectFrom(dbase)
 	if err != nil {
-		return nil, err
+		log.Print(err.Error())
+		return nil, Error{
+			Message: "error getting source from database",
+			Code:    http.StatusInternalServerError,
+		}
 	}
 
 	if len(sources) == 0 {
-		return nil, fmt.Errorf("source with the id = %d was not found", id)
+		return nil, Error{
+			Message: fmt.Sprintf("source with the id = %d was not found", id),
+			Code:    http.StatusNotFound,
+		}
 	}
 
 	var rssFeed rss.RSS
@@ -39,26 +49,42 @@ func getRSSFeed(dbase *sql.DB, id int) ([]byte, error) {
 	case strings.Contains(sources[0].URL, "vk.com"):
 		rssFeed, err = rssFromVk(dbase, sources[0])
 		if err != nil {
-			return nil, err
+			log.Print(err.Error())
+			return nil, Error{
+				Message: "error getting RSS feed from VK source",
+				Code:    http.StatusInternalServerError,
+			}
 		}
 	case strings.Contains(sources[0].URL, "nationalgeographic.com"):
 		rssFeed, err = rssFromNationalGeographic(sources[0])
 		if err != nil {
-			return nil, err
+			log.Print(err.Error())
+			return nil, Error{
+				Message: "error getting RSS feed from National Geographic articles",
+				Code:    http.StatusInternalServerError,
+			}
 		}
 	case strings.Contains(sources[0].URL, "telegram.org"):
 		rssFeed, err = rssFromTelegramBlog(sources[0])
 		if err != nil {
-			return nil, err
+			log.Print(err.Error())
+			return nil, Error{
+				Message: "error getting RSS feed from Telegram Blog articles",
+				Code:    http.StatusInternalServerError,
+			}
 		}
 	}
 
 	data, err := xml.Marshal(rssFeed)
 	if err != nil {
-		return nil, err
+		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
+		return nil, Error{
+			Message: "error marshalling of RSS feed",
+			Code:    http.StatusInternalServerError,
+		}
 	}
 
-	return data, nil
+	return data, Error{}
 }
 
 func rssFromVk(dbase *sql.DB, source db.Source) (rss.RSS, error) {
@@ -140,7 +166,7 @@ type VKRSSSource struct {
 	VKID          int    `json:"vk_id"`
 }
 
-func addVKRSSSource(dbase *sql.DB, vkRSSSource VKRSSSource) ([]byte, error) {
+func addVKRSSSource(dbase *sql.DB, vkRSSSource VKRSSSource) ([]byte, Error) {
 	var source = db.Source{
 		Name: vkRSSSource.SourceName,
 		URL:  vkRSSSource.URL,
@@ -152,7 +178,11 @@ func addVKRSSSource(dbase *sql.DB, vkRSSSource VKRSSSource) ([]byte, error) {
 
 	source, vkAccess, err := db.AddNewVKSource(source, vkAccess, dbase)
 	if err != nil {
-		return nil, err
+		log.Print(err.Error())
+		return nil, Error{
+			Message: "error adding a new VK source",
+			Code:    http.StatusInternalServerError,
+		}
 	}
 
 	var values = map[string]interface{}{
@@ -161,8 +191,12 @@ func addVKRSSSource(dbase *sql.DB, vkRSSSource VKRSSSource) ([]byte, error) {
 
 	data, err := json.Marshal(values)
 	if err != nil {
-		return nil, err
+		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
+		return nil, Error{
+			Message: "error adding a new VK source",
+			Code:    http.StatusInternalServerError,
+		}
 	}
 
-	return data, nil
+	return data, Error{}
 }

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -31,7 +32,7 @@ func (a *Article) composeInfo(articleTag *html.Node) {
 
 	doc, err := fetchHTMLNode(a.Link)
 	if err != nil {
-		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
 		return
 	}
 
@@ -57,7 +58,7 @@ func (a *Article) extractDescription(doc *html.Node) {
 	w := io.Writer(&buf)
 	err := html.Render(w, tag)
 	if err != nil {
-		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
 		return
 	}
 
@@ -77,7 +78,7 @@ func (a *Article) extractPublicationDate(doc *html.Node) {
 	w := io.Writer(&buf)
 	err := html.Render(w, tag)
 	if err != nil {
-		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
 		return
 	}
 
@@ -195,7 +196,7 @@ func fetchHTMLNode(u string) (*html.Node, error) {
 
 	doc, err := html.Parse(strings.NewReader(string(body)))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return doc, nil
@@ -204,18 +205,18 @@ func fetchHTMLNode(u string) (*html.Node, error) {
 func sendRequest(u string) ([]byte, error) {
 	response, err := http.Get(u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	defer func() {
 		if err != nil {
-			log.Printf("%s\n%s\n", err, debug.Stack())
+			log.Printf("\n%s\n%s", err, debug.Stack())
 		}
 	}()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return body, nil

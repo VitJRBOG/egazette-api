@@ -17,7 +17,7 @@ func Connect(connectionData config.DBConn) (*sql.DB, error) {
 		connectionData.Address, connectionData.DBName)
 	db, err := sql.Open("mysql", c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return db, nil
@@ -59,12 +59,12 @@ func (s *Source) SelectFrom(dbase *sql.DB) ([]Source, error) {
 
 	rows, err := dbase.Query(query, values...)
 	if err != nil {
-		return []Source{}, err
+		return []Source{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			log.Printf("%s\n%s\n", err, debug.Stack())
+			log.Printf("\n%s\n%s", err, debug.Stack())
 		}
 	}()
 
@@ -74,14 +74,14 @@ func (s *Source) SelectFrom(dbase *sql.DB) ([]Source, error) {
 		var source Source
 
 		if err := rows.Scan(&source.ID, &source.Name, &source.URL); err != nil {
-			return []Source{}, err
+			return []Source{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 
 		sources = append(sources, source)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []Source{}, err
+		return []Source{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return sources, nil
@@ -94,22 +94,22 @@ func (s *Source) InsertInto(query string, dbase *sql.DB, tx *sql.Tx) (int, error
 	case dbase == nil && tx != nil:
 		result, err := tx.Exec(query, s.Name, s.URL)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 
 		id, err = result.LastInsertId()
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 	case tx == nil && dbase != nil:
 		result, err := dbase.Exec(query, s.Name, s.URL)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 
 		id, err = result.LastInsertId()
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 	}
 
@@ -162,12 +162,12 @@ func (v *VKAccess) SelectFrom(dbase *sql.DB) ([]VKAccess, error) {
 
 	rows, err := dbase.Query(query, values...)
 	if err != nil {
-		return []VKAccess{}, err
+		return []VKAccess{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			log.Printf("%s\n%s\n", err, debug.Stack())
+			log.Printf("\n%s\n%s", err, debug.Stack())
 		}
 	}()
 
@@ -178,14 +178,14 @@ func (v *VKAccess) SelectFrom(dbase *sql.DB) ([]VKAccess, error) {
 
 		if err := rows.Scan(&vkAccess.ID, &vkAccess.SourceID,
 			&vkAccess.AccessToken, &vkAccess.VKID); err != nil {
-			return []VKAccess{}, err
+			return []VKAccess{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 
 		vkAccesses = append(vkAccesses, vkAccess)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []VKAccess{}, err
+		return []VKAccess{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return vkAccesses, nil
@@ -198,22 +198,22 @@ func (v *VKAccess) InsertInto(query string, dbase *sql.DB, tx *sql.Tx) (int, err
 	case dbase == nil && tx != nil:
 		result, err := tx.Exec(query, v.SourceID, v.AccessToken, v.VKID)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 
 		id, err = result.LastInsertId()
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 	case tx == nil && dbase != nil:
 		result, err := dbase.Exec(query, v.SourceID, v.AccessToken, v.VKID)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 
 		id, err = result.LastInsertId()
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 		}
 	}
 
@@ -223,7 +223,7 @@ func (v *VKAccess) InsertInto(query string, dbase *sql.DB, tx *sql.Tx) (int, err
 func AddNewVKSource(s Source, v VKAccess, dbase *sql.DB) (Source, VKAccess, error) {
 	tx, err := dbase.Begin()
 	if err != nil {
-		return Source{}, VKAccess{}, err
+		return Source{}, VKAccess{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	insertIntoFeed := "INSERT INTO source(name, url) VALUES(?, ?)"
@@ -247,7 +247,7 @@ func AddNewVKSource(s Source, v VKAccess, dbase *sql.DB) (Source, VKAccess, erro
 
 	err = tx.Commit()
 	if err != nil {
-		return Source{}, VKAccess{}, err
+		return Source{}, VKAccess{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return s, v, nil

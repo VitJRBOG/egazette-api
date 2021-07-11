@@ -44,7 +44,7 @@ func getDateInReadableFormat(date string) string {
 	dateFormat := "January 2, 2006"
 	t, err := time.Parse(dateFormat, date)
 	if err != nil {
-		log.Printf("%s\n%s\n\n", err.Error(), debug.Stack())
+		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
 		return ""
 	}
 

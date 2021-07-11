@@ -28,11 +28,11 @@ func GetDBConnectionData() (DBConn, error) {
 	var c DBConn
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return DBConn{}, err
+		return DBConn{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 	err = json.Unmarshal(data, &c)
 	if err != nil {
-		return DBConn{}, err
+		return DBConn{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return c, err
@@ -51,11 +51,11 @@ func GetServerConfig() (ServerCfg, error) {
 	var c ServerCfg
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return ServerCfg{}, err
+		return ServerCfg{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 	err = json.Unmarshal(data, &c)
 	if err != nil {
-		return ServerCfg{}, err
+		return ServerCfg{}, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return c, err
@@ -64,7 +64,7 @@ func GetServerConfig() (ServerCfg, error) {
 func getPath(localPath string) (string, error) {
 	absPath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	pathToPath := filepath.FromSlash(absPath + "/path.txt")
@@ -91,7 +91,7 @@ func checkFileExistence(path string) (bool, error) {
 		if os.IsNotExist(err) {
 			return false, nil
 		}
-		return false, err
+		return false, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 	return true, nil
 }
@@ -101,7 +101,7 @@ func readTextFile(path string) (string, error) {
 	defer func() {
 		err := file.Close()
 		if err != nil {
-			log.Printf("%s\n%s\n", err, debug.Stack())
+			log.Printf("\n%s\n%s", err, debug.Stack())
 		}
 	}()
 	if err != nil {
@@ -116,7 +116,7 @@ func readTextFile(path string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", err
+		return "", fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 
 	return text, nil

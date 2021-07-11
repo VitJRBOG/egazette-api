@@ -15,13 +15,13 @@ import (
 func Start(dbConn config.DBConn, serverCfg config.ServerCfg) {
 	dbase, err := connectToDB(dbConn)
 	if err != nil {
-		log.Fatalf(err.Error(), debug.Stack())
+		log.Fatalf(err.Error())
 	}
 
 	defer func(dbase *sql.DB) {
 		err := dbase.Close()
 		if err != nil {
-			log.Printf("%s\n%s\n", err, debug.Stack())
+			log.Printf("\n%s\n%s", err, debug.Stack())
 		}
 	}(dbase)
 
@@ -31,7 +31,7 @@ func Start(dbConn config.DBConn, serverCfg config.ServerCfg) {
 	http.Handle("/", rtr)
 	err = http.ListenAndServe(":"+serverCfg.Port, nil)
 	if err != nil {
-		log.Fatalf(err.Error(), debug.Stack())
+		log.Fatalf("\n%s\n%s", err.Error(), debug.Stack())
 	}
 }
 
@@ -44,7 +44,8 @@ func connectToDB(dbConn config.DBConn) (*sql.DB, error) {
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("couldn't connect to database: configs are empty")
+		return nil, fmt.Errorf("\ncouldn't connect to database: configs are empty\n%s",
+			debug.Stack())
 	}
 
 	return dbase, nil
