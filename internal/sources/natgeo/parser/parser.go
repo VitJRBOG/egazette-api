@@ -135,14 +135,17 @@ func extractTagAttributes(wg *sync.WaitGroup, articles []*Article,
 		if commonTag == nil {
 			break
 		}
-		articleTag := commonTag.FirstChild.FirstChild.FirstChild
-		var a Article
-		articles = append(articles, &a)
-		wg.Add(1)
-		go func(a *Article) {
-			a.composeInfo(articleTag)
-			wg.Done()
-		}(&a)
+
+		if findTag("SectionLabel--sponsor", commonTag) == nil {
+			articleTag := commonTag.FirstChild.FirstChild.FirstChild
+			var a Article
+			articles = append(articles, &a)
+			wg.Add(1)
+			go func(a *Article) {
+				a.composeInfo(articleTag)
+				wg.Done()
+			}(&a)
+		}
 
 		commonTag = commonTag.NextSibling
 	}
