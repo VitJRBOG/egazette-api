@@ -54,15 +54,11 @@ func (a *Article) extractDescription(doc *html.Node) {
 		return
 	}
 
-	var buf bytes.Buffer
-	w := io.Writer(&buf)
-	err := html.Render(w, tag)
+	var err error
+	a.Description, err = getTextFromTag(tag)
 	if err != nil {
-		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
-		return
+		log.Print(err.Error())
 	}
-
-	a.Description = buf.String()
 
 	i := strings.Index(a.Description, ">")
 	a.Description = a.Description[i+1:]
@@ -74,15 +70,11 @@ func (a *Article) extractDescription(doc *html.Node) {
 func (a *Article) extractPublicationDate(doc *html.Node) {
 	tag := findTag("Byline__Meta Byline__Meta--publishDate", doc)
 
-	var buf bytes.Buffer
-	w := io.Writer(&buf)
-	err := html.Render(w, tag)
+	var err error
+	a.Date, err = getTextFromTag(tag)
 	if err != nil {
-		log.Printf("\n%s\n%s", err.Error(), debug.Stack())
-		return
+		log.Print(err.Error())
 	}
-
-	a.Date = buf.String()
 
 	if len([]rune(a.Date)) <= 0 {
 		return
@@ -137,20 +129,38 @@ func extractTagAttributes(wg *sync.WaitGroup, articles []*Article,
 		}
 
 		if findTag("SectionLabel--sponsor", commonTag) == nil {
-			articleTag := commonTag.FirstChild.FirstChild.FirstChild
-			var a Article
-			articles = append(articles, &a)
-			wg.Add(1)
-			go func(a *Article) {
-				a.composeInfo(articleTag)
-				wg.Done()
-			}(&a)
+			asdas := findTag("SectionLabel SectionLabel--link", commonTag)
+			text, err := getTextFromTag(asdas.FirstChild.FirstChild)
+			if err != nil {
+				log.Print(err.Error())
+			}
+			if !(strings.Contains(text, "Magazine")) {
+				articleTag := commonTag.FirstChild.FirstChild.FirstChild
+				var a Article
+				articles = append(articles, &a)
+				wg.Add(1)
+				go func(a *Article) {
+					a.composeInfo(articleTag)
+					wg.Done()
+				}(&a)
+			}
 		}
 
 		commonTag = commonTag.NextSibling
 	}
 
 	return articles
+}
+
+func getTextFromTag(doc *html.Node) (string, error) {
+	var buf bytes.Buffer
+	w := io.Writer(&buf)
+	err := html.Render(w, doc)
+	if err != nil {
+		return "", fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
+	}
+
+	return buf.String(), nil
 }
 
 func getElementByClass(n *html.Node, k string) *html.Node {
