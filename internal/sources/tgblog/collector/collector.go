@@ -6,8 +6,8 @@ import (
 	"runtime/debug"
 	"time"
 
-	rss "github.com/VitJRBOG/RSSFeeder/internal/rss"
-	tgblogparser "github.com/VitJRBOG/RSSFeeder/internal/sources/tgblog/parser"
+	rss "RSSFeeder/internal/rss"
+	tgblogparser "RSSFeeder/internal/sources/tgblog/parser"
 )
 
 func ComposeRSS(articles []tgblogparser.Article) (rss.RSS, error) {

@@ -1,4 +1,4 @@
-module github.com/VitJRBOG/RSSFeeder
+module RSSFeeder
 
 go 1.16
 

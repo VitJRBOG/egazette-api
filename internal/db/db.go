@@ -7,7 +7,8 @@ import (
 	"runtime/debug"
 	"strings"
 
-	config "github.com/VitJRBOG/RSSFeeder/internal/config"
+	config "RSSFeeder/internal/config"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 

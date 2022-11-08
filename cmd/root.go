@@ -1,14 +1,14 @@
-package main
+package cmd
 
 import (
 	"log"
 	"runtime/debug"
 
-	config "github.com/VitJRBOG/RSSFeeder/internal/config"
-	server "github.com/VitJRBOG/RSSFeeder/internal/server"
+	config "RSSFeeder/internal/config"
+	server "RSSFeeder/internal/server"
 )
 
-func main() {
+func Execute() {
 	dbConn, err := config.GetDBConnectionData()
 	if err != nil {
 		log.Fatalf("%s\n%s\n", err.Error(), debug.Stack())

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	rss "github.com/VitJRBOG/RSSFeeder/internal/rss"
-	vkapi "github.com/VitJRBOG/RSSFeeder/internal/sources/vk/api"
+	rss "RSSFeeder/internal/rss"
+	vkapi "RSSFeeder/internal/sources/vk/api"
 )
 
 func ComposeRSS(community vkapi.Community, wallPosts []vkapi.WallPost) (rss.RSS, error) {

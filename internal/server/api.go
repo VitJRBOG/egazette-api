@@ -12,14 +12,14 @@ import (
 	"strconv"
 	"strings"
 
-	db "github.com/VitJRBOG/RSSFeeder/internal/db"
-	rss "github.com/VitJRBOG/RSSFeeder/internal/rss"
-	natgeocollector "github.com/VitJRBOG/RSSFeeder/internal/sources/natgeo/collector"
-	natgeoparser "github.com/VitJRBOG/RSSFeeder/internal/sources/natgeo/parser"
-	tgblogcollector "github.com/VitJRBOG/RSSFeeder/internal/sources/tgblog/collector"
-	tgblogparser "github.com/VitJRBOG/RSSFeeder/internal/sources/tgblog/parser"
-	vkapi "github.com/VitJRBOG/RSSFeeder/internal/sources/vk/api"
-	vkcollector "github.com/VitJRBOG/RSSFeeder/internal/sources/vk/collector"
+	db "RSSFeeder/internal/db"
+	rss "RSSFeeder/internal/rss"
+	natgeocollector "RSSFeeder/internal/sources/natgeo/collector"
+	natgeoparser "RSSFeeder/internal/sources/natgeo/parser"
+	tgblogcollector "RSSFeeder/internal/sources/tgblog/collector"
+	tgblogparser "RSSFeeder/internal/sources/tgblog/parser"
+	vkapi "RSSFeeder/internal/sources/vk/api"
+	vkcollector "RSSFeeder/internal/sources/vk/collector"
 )
 
 func getRSSFeed(dbase *sql.DB, id int) ([]byte, Error) {
