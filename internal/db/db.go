@@ -12,10 +12,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Connect(connectionData config.DBConn) (*sql.DB, error) {
-	c := fmt.Sprintf("%s:%s@tcp(%s)/%s",
-		connectionData.Login, connectionData.Password,
-		connectionData.Address, connectionData.DBName)
+func Connect(connectionData config.DBConnCfg) (*sql.DB, error) {
+	c := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		connectionData.User, connectionData.Password,
+		connectionData.Host, connectionData.Port, connectionData.DBName)
 	db, err := sql.Open("mysql", c)
 	if err != nil {
 		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())

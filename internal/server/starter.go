@@ -13,7 +13,7 @@ import (
 	mux "github.com/gorilla/mux"
 )
 
-func Start(dbConn config.DBConn, serverCfg config.ServerCfg) {
+func Start(dbConn config.DBConnCfg, serverCfg config.ServerCfg) {
 	dbase, err := connectToDB(dbConn)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -36,9 +36,9 @@ func Start(dbConn config.DBConn, serverCfg config.ServerCfg) {
 	}
 }
 
-func connectToDB(dbConn config.DBConn) (*sql.DB, error) {
+func connectToDB(dbConn config.DBConnCfg) (*sql.DB, error) {
 	var dbase *sql.DB
-	if (dbConn != config.DBConn{}) {
+	if (dbConn != config.DBConnCfg{}) {
 		var err error
 		dbase, err = db.Connect(dbConn)
 		if err != nil {
