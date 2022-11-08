@@ -6,8 +6,7 @@ import (
 )
 
 func Execute() {
-	dbConnCfg := config.NewDBConnCfg()
 	serverCfg := config.NewServerConfig()
 
-	server.Start(dbConnCfg, serverCfg)
+	server.Start(serverCfg)
 }
