@@ -1,7 +1,7 @@
 package main
 
-import "RSSFeeder/cmd"
+import "egazette-api/cmd/egazetteapi"
 
 func main() {
-	cmd.Execute()
+	egazetteapi.Execute()
 }
