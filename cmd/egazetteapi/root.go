@@ -1,7 +1,10 @@
 package egazetteapi
 
-import "fmt"
+import (
+	"egazette-api/internal/server"
+)
 
+// Execute starts the main functions of the program.
 func Execute() {
-	fmt.Println("Hello world")
+	server.Up()
 }
