@@ -9,7 +9,7 @@ import (
 
 // Up starts the server.
 func Up() {
-	// TODO: call the requests handling
+	handling()
 
 	address := fmt.Sprintf(":%d", 8080) // FIXME: remove hardcoded port
 	err := http.ListenAndServe(address, logging(http.DefaultServeMux))
