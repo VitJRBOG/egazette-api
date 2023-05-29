@@ -1,6 +1,7 @@
 package server
 
 import (
+	"egazette-api/internal/config"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,10 +9,10 @@ import (
 )
 
 // Up starts the server.
-func Up() {
+func Up(serverCfg config.ServerCfg) {
 	handling()
 
-	address := fmt.Sprintf(":%d", 8080) // FIXME: remove hardcoded port
+	address := fmt.Sprintf(":%s", serverCfg.Port)
 	err := http.ListenAndServe(address, logging(http.DefaultServeMux))
 
 	if err != nil {
