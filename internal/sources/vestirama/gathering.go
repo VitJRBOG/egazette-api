@@ -46,7 +46,22 @@ func (a *Article) extractTitle(tag *html.Node) {
 func (a *Article) extractCoverURL(tag *html.Node) {
 	coverURL := tag.Attr[0].Val
 
-	a.CoverURL = strings.Replace(fmt.Sprintf("%s%s", TargetURL, coverURL), "novosti/", "", 1)
+	fullSizeImageURL := a.composeURLToFullSizeCoverImage(coverURL)
+
+	a.CoverURL = strings.Replace(fmt.Sprintf("%s%s", TargetURL, fullSizeImageURL), "novosti/", "", 1)
+}
+
+func (a *Article) composeURLToFullSizeCoverImage(coverURL string) string {
+	fullSizeImageURL := strings.Replace(coverURL, "/assets/cache_image/", "", 1)
+
+	begin := strings.Index(fullSizeImageURL, "_")
+	end := strings.Index(fullSizeImageURL[begin:], ".")
+
+	sizeOfSmallImageInFileName := fullSizeImageURL[begin : begin+end]
+
+	fullSizeImageURL = strings.Replace(fullSizeImageURL, sizeOfSmallImageInFileName, "", 1)
+
+	return fullSizeImageURL
 }
 
 func getArticleData() ([]Article, error) {
