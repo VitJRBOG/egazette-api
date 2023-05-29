@@ -26,7 +26,7 @@ type Article struct {
 func (a *Article) extractURL(tag *html.Node) {
 	articleURL := tag.Attr[0].Val
 
-	a.URL = strings.Replace(articleURL, "novosti/", TargetURL, 1)
+	a.URL = fmt.Sprintf("%s%s", strings.Replace(TargetURL, "novosti/", "", 1), articleURL)
 }
 
 func (a *Article) extractDate(tag *html.Node) {
