@@ -1,7 +1,10 @@
 package server
 
 import (
+	"egazette-api/internal/rss"
+	"egazette-api/internal/sources/vestirama"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"log"
 	"net/http"
@@ -131,16 +134,34 @@ func handling() {
 	http.HandleFunc("/source/vestirama/articles", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			data := vestiramaArticles()
+			rssFeed, err := vestiramaArticles()
+			if err != nil {
+				sendError(w, err)
+			}
 
-			sendData(w, http.StatusOK, []map[string]string{{
-				"articles": data,
-			}})
+			sendRSSFeed(w, rssFeed)
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
 			return
 		}
 	})
+}
+
+func sendRSSFeed(w http.ResponseWriter, values interface{}) {
+	data, err := xml.Marshal(values)
+	if err != nil {
+		log.Println(err.Error())
+		sendError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/xml")
+	_, err = w.Write(data)
+	if err != nil {
+		log.Println(err.Error())
+		sendError(w, err)
+		return
+	}
 }
 
 func sendData(w http.ResponseWriter, status int, values interface{}) {
@@ -195,7 +216,15 @@ func jplArticles() string {
 	return "List of articles from JPL"
 }
 
-func vestiramaArticles() string {
-	// TODO: return articles from Vestirama source
-	return "List of articles from Vestirama"
+func vestiramaArticles() (rss.RSS, error) {
+	rssFeed, err := vestirama.ComposeRSSFeed()
+	if err != nil {
+		log.Println(err.Error())
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusInternalServerError,
+			Detail:     "couldn't fetch data from Vestirama",
+		}
+	}
+
+	return rssFeed, nil
 }
