@@ -75,7 +75,7 @@ func getArticleData() ([]Article, error) {
 		return []Article{}, err
 	}
 
-	tagOfArticlesList := sources.FindTag("news", htmlNode).FirstChild.NextSibling
+	tagOfArticlesList := sources.FindTag(htmlNode, "class", "news").FirstChild.NextSibling
 
 	articles := composeArticles(tagOfArticlesList.FirstChild.NextSibling)
 
