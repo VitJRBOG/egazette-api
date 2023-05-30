@@ -2,6 +2,7 @@ package server
 
 import (
 	"egazette-api/internal/rss"
+	"egazette-api/internal/sources/jpl"
 	"egazette-api/internal/sources/vestirama"
 	"encoding/json"
 	"encoding/xml"
@@ -87,11 +88,13 @@ func handling() {
 	http.HandleFunc("/source/jpl/articles", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			data := jplArticles()
+			rssFeed, err := jplArticles()
 
-			sendData(w, http.StatusOK, []map[string]string{{
-				"articles": data,
-			}})
+			if err != nil {
+				sendError(w, err)
+			}
+
+			sendRSSFeed(w, rssFeed)
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
 			return
@@ -211,9 +214,17 @@ func sendError(w http.ResponseWriter, reqError error) {
 	}
 }
 
-func jplArticles() string {
-	// TODO: return articles from JPL source
-	return "List of articles from JPL"
+func jplArticles() (interface{}, error) {
+	data, err := jpl.ComposeRSSFeed()
+	if err != nil {
+		log.Println(err.Error())
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusInternalServerError,
+			Detail:     "couldn't fetch data from Vestirama",
+		}
+	}
+
+	return data, nil
 }
 
 func vestiramaArticles() (rss.RSS, error) {
