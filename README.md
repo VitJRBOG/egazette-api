@@ -20,4 +20,5 @@ _`8000` is the default port. You can replace it with another port in the `docker
 
 # Available sources
 
+-   Jet Propulsion Laboratory News: `jpl`
 -   Vestirama's News: `vestirama`
