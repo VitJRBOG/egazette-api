@@ -1,0 +1,11 @@
+services:
+  web:
+    build:
+      context: ./
+      dockerfile: ./docker/web/Dockerfile
+    container_name: egazette-api
+    ports:
+      - 8000:8000
+    environment:
+      - SERVER_PORT=8000
+    command: bash -c "go mod download && go build -o bin/app && cd bin/ && ./app"
