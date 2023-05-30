@@ -11,6 +11,7 @@ import (
 // Up starts the server.
 func Up(serverCfg config.ServerCfg) {
 	handling()
+	log.Println("request handling is ready")
 
 	address := fmt.Sprintf(":%s", serverCfg.Port)
 	err := http.ListenAndServe(address, logging(http.DefaultServeMux))
