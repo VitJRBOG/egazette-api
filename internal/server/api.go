@@ -92,6 +92,7 @@ func handling() {
 
 			if err != nil {
 				sendError(w, err)
+				return
 			}
 
 			sendRSSFeed(w, rssFeed)
@@ -140,6 +141,7 @@ func handling() {
 			rssFeed, err := vestiramaArticles()
 			if err != nil {
 				sendError(w, err)
+				return
 			}
 
 			sendRSSFeed(w, rssFeed)
