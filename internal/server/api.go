@@ -195,12 +195,12 @@ func sendData(w http.ResponseWriter, status int, values interface{}) {
 
 func sendError(w http.ResponseWriter, reqError error) {
 	response := map[string]interface{}{
-		"status": http.StatusInternalServerError,
-		"error":  "internal server error",
+		"error": "internal server error",
 	}
+	w.WriteHeader(http.StatusInternalServerError)
 
 	if errInfo, ok := reqError.(Error); ok {
-		response["status"] = errInfo.HTTPStatus
+		w.WriteHeader(errInfo.HTTPStatus)
 		response["error"] = errInfo.Detail
 	}
 
