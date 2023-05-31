@@ -224,7 +224,7 @@ func jplArticles() (interface{}, error) {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
 			HTTPStatus: http.StatusInternalServerError,
-			Detail:     "couldn't fetch data from Vestirama",
+			Detail:     "couldn't fetch data from JPL",
 		}
 	}
 
