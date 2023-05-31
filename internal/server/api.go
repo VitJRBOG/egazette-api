@@ -28,9 +28,7 @@ func handling() {
 		case http.MethodGet:
 			text := "/source - list of sources"
 
-			sendData(w, http.StatusOK, []map[string]string{{
-				"text": text,
-			}})
+			sendText(w, http.StatusOK, text)
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
 			return
@@ -40,12 +38,10 @@ func handling() {
 	http.HandleFunc("/source", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			text := "/source/jpl\n" +
-				"/source/vestirama"
+			text := fmt.Sprintf("%s/source/jpl\n%s/source/vestirama",
+				r.Host, r.Host)
 
-			sendData(w, http.StatusOK, []map[string]string{{
-				"text": text,
-			}})
+			sendText(w, http.StatusOK, text)
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
 			return
@@ -55,12 +51,10 @@ func handling() {
 	http.HandleFunc("/source/jpl", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			text := "/source/jpl/info - about source\n" +
-				"/source/jpl/articles - list of articles"
+			text := fmt.Sprintf("%s/source/jpl/info - about source\n%s/source/jpl/articles - list of articles",
+				r.Host, r.Host)
 
-			sendData(w, http.StatusOK, []map[string]string{{
-				"text": text,
-			}})
+			sendText(w, http.StatusOK, text)
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
 			return
@@ -105,12 +99,10 @@ func handling() {
 	http.HandleFunc("/source/vestirama", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			text := "/source/vestirama/info - about source\n" +
-				"/source/vestirama/articles - list of articles"
+			text := fmt.Sprintf("%s/source/vestirama/info - about source\n%s/source/vestirama/articles - list of articles",
+				r.Host, r.Host)
 
-			sendData(w, http.StatusOK, []map[string]string{{
-				"text": text,
-			}})
+			sendText(w, http.StatusOK, text)
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
 			return
@@ -150,6 +142,16 @@ func handling() {
 			return
 		}
 	})
+}
+
+func sendText(w http.ResponseWriter, status int, text string) {
+	w.WriteHeader(status)
+	_, err := w.Write([]byte(text))
+	if err != nil {
+		log.Println(err.Error())
+		sendError(w, err)
+		return
+	}
 }
 
 func sendRSSFeed(w http.ResponseWriter, values interface{}) {
