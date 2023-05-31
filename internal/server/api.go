@@ -171,7 +171,6 @@ func sendRSSFeed(w http.ResponseWriter, values interface{}) {
 
 func sendData(w http.ResponseWriter, status int, values interface{}) {
 	response := map[string]interface{}{
-		"status":   status,
 		"response": values,
 	}
 
@@ -182,6 +181,7 @@ func sendData(w http.ResponseWriter, status int, values interface{}) {
 		return
 	}
 
+	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
