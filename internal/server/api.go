@@ -220,8 +220,8 @@ func sendError(w http.ResponseWriter, reqError error) {
 	}
 }
 
-func jplArticles() (interface{}, error) {
-	data, err := jpl.ComposeRSSFeed()
+func jplArticles() (rss.RSS, error) {
+	rssFeed, err := jpl.ComposeRSSFeed()
 	if err != nil {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
@@ -230,7 +230,7 @@ func jplArticles() (interface{}, error) {
 		}
 	}
 
-	return data, nil
+	return rssFeed, nil
 }
 
 func vestiramaArticles() (rss.RSS, error) {
