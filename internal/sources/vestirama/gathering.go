@@ -30,13 +30,10 @@ func (a *Article) extractURL(tag *html.Node) {
 }
 
 func (a *Article) extractDate(tag *html.Node) {
-	date := []rune(tag.Data)
+	date := strings.Trim(tag.Data, "'")
+	date = strings.TrimLeft(date, " ")
 
-	if date[len(date)-1] == '\'' {
-		date = date[:len(date)-1]
-	}
-
-	a.Date = string(date)
+	a.Date = date
 }
 
 func (a *Article) extractTitle(tag *html.Node) {
