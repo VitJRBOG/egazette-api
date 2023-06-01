@@ -200,7 +200,9 @@ func sendError(w http.ResponseWriter, reqError error) {
 	w.WriteHeader(http.StatusInternalServerError)
 
 	if errInfo, ok := reqError.(Error); ok {
-		w.WriteHeader(errInfo.HTTPStatus)
+		if errInfo.HTTPStatus != http.StatusInternalServerError {
+			w.WriteHeader(errInfo.HTTPStatus)
+		}
 		response["error"] = errInfo.Detail
 	}
 
