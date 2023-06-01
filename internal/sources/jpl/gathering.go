@@ -3,8 +3,6 @@ package jpl
 import (
 	"egazette-api/internal/sources"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -13,44 +11,96 @@ import (
 // TargetURL stores source URL.
 const TargetURL = "https://www.jpl.nasa.gov/news"
 
+// Source stores data about the source.
+type Source struct {
+	name       string
+	homeURL    string
+	dateFormat string
+}
+
+// Name returns a name of source.
+func (s Source) Name() string {
+	return s.name
+}
+
+// HomeURL returns an URL of the home page of source.
+func (s Source) HomeURL() string {
+	return s.homeURL
+}
+
+// DateFormat returns an format of articles publication dates.
+func (s Source) DateFormat() string {
+	return s.dateFormat
+}
+
+// GetSourceData returns a struct with data about source.
+func GetSourceData() Source {
+	return Source{
+		name:       "Jet Propulsion Laboratory",
+		homeURL:    "https://www.jpl.nasa.gov",
+		dateFormat: "January 2, 2006",
+	}
+}
+
 // Article stores data about the article from the source.
 type Article struct {
-	URL         string
-	Date        string
-	Title       string
-	Description string
-	CoverURL    string
+	url         string
+	date        string
+	title       string
+	description string
+	coverURL    string
+}
+
+// URL returns an URL of the article.
+func (a Article) URL() string {
+	return a.url
+}
+
+// Date returns the date the article was published.
+func (a Article) Date() string {
+	return a.date
+}
+
+// Title returns the title of the article.
+func (a Article) Title() string {
+	return a.title
+}
+
+// Description returns the description of the article.
+func (a Article) Description() string {
+	return a.description
+}
+
+// CoverURL returns an URL of the article cover.
+func (a Article) CoverURL() string {
+	return a.coverURL
 }
 
 func (a *Article) extractURL(tag *html.Node) {
 	articleURL := tag.Attr[0].Val
 
-	a.URL = fmt.Sprintf("%s%s", strings.Replace(TargetURL, "/news", "", 1), articleURL)
+	a.url = fmt.Sprintf("%s%s", strings.Replace(TargetURL, "/news", "", 1), articleURL)
 }
 
 func (a *Article) extractDate(tag *html.Node) {
-	a.Date = tag.Data
+	a.date = tag.Data
 }
 
 func (a *Article) extractTitle(tag *html.Node) {
-	a.Title = tag.Data
+	a.title = tag.Data
 }
 
 func (a *Article) extractDescription(tag *html.Node) {
-	a.Description = tag.Data
+	a.description = tag.Data
 }
 
 func (a *Article) extractCoverURL(tag *html.Node) {
-	a.CoverURL = tag.Attr[0].Val
+	a.coverURL = tag.Attr[0].Val
 }
 
-func getArticleData() ([]Article, error) {
-	dom, err := fetchDOM(TargetURL)
-	if err != nil {
-		return []Article{}, err
-	}
-
-	htmlNode, err := convertToHTMLNode(dom)
+// GetArticleData parses articles from the website of source and returns them.
+func GetArticleData() ([]Article, error) {
+	htmlNode, err := sources.GetHTMLNode(TargetURL)
 	if err != nil {
 		return []Article{}, err
 	}
@@ -100,27 +150,4 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) Article {
 	article.extractCoverURL(tagOfArticleCoverURL)
 
 	return article
-}
-
-func convertToHTMLNode(dom []byte) (*html.Node, error) {
-	htmlNode, err := html.Parse(strings.NewReader(string(dom)))
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse the DOM of %s: %s", TargetURL, err.Error())
-	}
-
-	return htmlNode, nil
-}
-
-func fetchDOM(targetURL string) ([]byte, error) {
-	response, err := http.Get(targetURL)
-	if err != nil {
-		return nil, fmt.Errorf("unable to fetch a DOM from %s: %s", targetURL, err.Error())
-	}
-
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read respose.Body of %s: %s", targetURL, err.Error())
-	}
-
-	return body, nil
 }

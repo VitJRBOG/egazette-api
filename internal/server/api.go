@@ -221,7 +221,8 @@ func sendError(w http.ResponseWriter, reqError error) {
 }
 
 func jplArticles() (rss.RSS, error) {
-	rssFeed, err := jpl.ComposeRSSFeed()
+	source := jpl.GetSourceData()
+	articles, err := jpl.GetArticleData()
 	if err != nil {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
@@ -230,16 +231,47 @@ func jplArticles() (rss.RSS, error) {
 		}
 	}
 
+	iArticles := make([]rss.Article, len(articles))
+
+	for i := range iArticles {
+		iArticles[i] = articles[i]
+	}
+
+	rssFeed, err := rss.ComposeRSSFeed(source, iArticles)
+	if err != nil {
+		log.Println(err.Error())
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusInternalServerError,
+			Detail:     "couldn't compose RSS feed with JPL articles",
+		}
+	}
+
 	return rssFeed, nil
 }
 
 func vestiramaArticles() (rss.RSS, error) {
-	rssFeed, err := vestirama.ComposeRSSFeed()
+	source := vestirama.GetSourceData()
+	articles, err := vestirama.GetArticleData()
 	if err != nil {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
 			HTTPStatus: http.StatusInternalServerError,
 			Detail:     "couldn't fetch data from Vestirama",
+		}
+	}
+
+	iArticles := make([]rss.Article, len(articles))
+
+	for i := range iArticles {
+		iArticles[i] = articles[i]
+	}
+
+	rssFeed, err := rss.ComposeRSSFeed(source, iArticles)
+	if err != nil {
+		log.Println(err.Error())
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusInternalServerError,
+			Detail:     "couldn't compose RSS feed with Vestirama articles",
 		}
 	}
 
