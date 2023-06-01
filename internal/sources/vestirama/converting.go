@@ -53,7 +53,7 @@ func putArticleData(r rss.RSS, articles []Article) (rss.RSS, error) {
 }
 
 func prepareDateForRSS(referenceDate string) (string, error) {
-	referenceDateFormat := "02.01.2006 15:04"
+	referenceDateFormat := "2.01.2006 15:04"
 	t, err := time.Parse(referenceDateFormat, referenceDate)
 	if err != nil {
 		return "", fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
