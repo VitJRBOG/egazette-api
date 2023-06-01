@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"runtime/debug"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -107,7 +106,7 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) Article {
 func convertToHTMLNode(dom []byte) (*html.Node, error) {
 	htmlNode, err := html.Parse(strings.NewReader(string(dom)))
 	if err != nil {
-		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
+		return nil, fmt.Errorf("unable to parse the DOM of %s: %s", TargetURL, err.Error())
 	}
 
 	return htmlNode, nil
@@ -116,18 +115,18 @@ func convertToHTMLNode(dom []byte) (*html.Node, error) {
 func fetchDOM(targetURL string) ([]byte, error) {
 	response, err := http.Get(targetURL)
 	if err != nil {
-		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
+		return nil, fmt.Errorf("unable to fetch a DOM from %s: %s", targetURL, err.Error())
 	}
 
 	defer func() {
 		if err != nil {
-			log.Printf("%s\n%s\n", err, debug.Stack())
+			log.Printf("defer failed: %s", err)
 		}
 	}()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
+		return nil, fmt.Errorf("unable to read respose.Body of %s: %s", targetURL, err.Error())
 	}
 
 	return body, nil

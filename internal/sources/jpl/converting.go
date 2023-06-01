@@ -3,7 +3,6 @@ package jpl
 import (
 	"egazette-api/internal/rss"
 	"fmt"
-	"runtime/debug"
 	"time"
 )
 
@@ -56,7 +55,7 @@ func prepareDateForRSS(referenceDate string) (string, error) {
 	referenceDateFormat := "January 2, 2006"
 	t, err := time.Parse(referenceDateFormat, referenceDate)
 	if err != nil {
-		return "", fmt.Errorf("\n%s\n%s", err.Error(), debug.Stack())
+		return "", fmt.Errorf("failed conversion JPL date to RSS date: %s", err.Error())
 	}
 
 	d := "Mon, Jan 2 2006 15:04:05 -0700"
