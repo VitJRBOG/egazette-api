@@ -4,7 +4,6 @@ import (
 	"egazette-api/internal/sources"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -117,12 +116,6 @@ func fetchDOM(targetURL string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch a DOM from %s: %s", targetURL, err.Error())
 	}
-
-	defer func() {
-		if err != nil {
-			log.Printf("defer failed: %s", err)
-		}
-	}()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
