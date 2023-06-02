@@ -16,10 +16,10 @@ services:
       timeout: 5s
       retries: 5
 
-  web:
+  api:
     build:
       context: ./
-      dockerfile: ./docker/web/Dockerfile
+      dockerfile: ./docker/api/Dockerfile
     container_name: egazette-api
     ports:
       - 8000:8000
