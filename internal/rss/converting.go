@@ -3,6 +3,7 @@ package rss
 import (
 	"egazette-api/internal/models"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -28,7 +29,7 @@ func putSourceInfo(r RSS, source models.Source) RSS {
 
 func putArticleData(r RSS, source models.Source, articles []models.Article) (RSS, error) {
 	for _, article := range articles {
-		date, err := prepareDateForRSS(source.Name, source.DateFormat, article.Date)
+		date, err := prepareUnixTSForRSS(article.Date)
 		if err != nil {
 			return RSS{}, err
 		}
@@ -46,12 +47,13 @@ func putArticleData(r RSS, source models.Source, articles []models.Article) (RSS
 	return r, nil
 }
 
-func prepareDateForRSS(sourceName, referenceDateFormat, referenceDate string) (string, error) {
-	t, err := time.Parse(referenceDateFormat, referenceDate)
+func prepareUnixTSForRSS(unixTimeStamp string) (string, error) {
+	t, err := strconv.ParseInt(unixTimeStamp, 10, 64)
 	if err != nil {
-		return "", fmt.Errorf("failed conversion %s date to RSS date: %s", sourceName, err.Error())
+		return "", fmt.Errorf("failed to convert unix timestamp str '%s' to int64: %s",
+			unixTimeStamp, err)
 	}
 
-	d := "Mon, Jan 2 2006 15:04:05 -0700"
-	return t.Format(d), nil
+	rssDateLayout := "Mon, Jan 2 2006 15:04:05 -0700"
+	return time.Unix(t, 0).Format(rssDateLayout), nil
 }

@@ -30,12 +30,15 @@ func GetArticleData() ([]models.Article, error) {
 
 	tagOfArticlesList := sources.FindTag(htmlNode, "class", "news").FirstChild.NextSibling
 
-	articles := composeArticles(tagOfArticlesList.FirstChild.NextSibling)
+	articles, err := composeArticles(tagOfArticlesList.FirstChild.NextSibling)
+	if err != nil {
+		return []models.Article{}, err
+	}
 
 	return articles, nil
 }
 
-func composeArticles(tagOfArticleAnnouncement *html.Node) []models.Article {
+func composeArticles(tagOfArticleAnnouncement *html.Node) ([]models.Article, error) {
 	var articles []models.Article
 
 	for {
@@ -46,16 +49,19 @@ func composeArticles(tagOfArticleAnnouncement *html.Node) []models.Article {
 			break
 		}
 
-		article := extractTagAttributes(tagOfArticleAnnouncement)
+		article, err := extractTagAttributes(tagOfArticleAnnouncement)
+		if err != nil {
+			return nil, err
+		}
 		articles = append(articles, article)
 
 		tagOfArticleAnnouncement = tagOfArticleAnnouncement.NextSibling.NextSibling
 	}
 
-	return articles
+	return articles, nil
 }
 
-func extractTagAttributes(tagOfArticleAnnouncement *html.Node) models.Article {
+func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, error) {
 	article := models.Article{}
 
 	tagOfArticleCoverURL := tagOfArticleAnnouncement.FirstChild.NextSibling.FirstChild
@@ -70,9 +76,13 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) models.Article {
 	article.Title = extractTitle(tagOfArticleTitle)
 
 	tagOfArticleDate := tagOfArticleTextInfo.FirstChild.NextSibling.FirstChild.NextSibling.FirstChild
-	article.Date = extractDate(tagOfArticleDate)
+	err := article.SetDate(extractDate(tagOfArticleDate))
+	if err != nil {
+		return models.Article{}, fmt.Errorf("failed to extract tag attributes of the '%s' article: %s",
+			article.Title, err)
+	}
 
-	return article
+	return article, nil
 }
 
 func extractURL(tag *html.Node) string {
@@ -81,11 +91,14 @@ func extractURL(tag *html.Node) string {
 	return fmt.Sprintf("%s%s", strings.Replace(TargetURL, "novosti/", "", 1), articleURL)
 }
 
-func extractDate(tag *html.Node) string {
+func extractDate(tag *html.Node) (string, string) {
+	dateLayout := "2.01.2006 15:04 -0700"
+
 	date := strings.Trim(tag.Data, "'")
 	date = strings.TrimLeft(date, " ")
+	date += " +0500"
 
-	return date
+	return dateLayout, date
 }
 
 func extractTitle(tag *html.Node) string {
