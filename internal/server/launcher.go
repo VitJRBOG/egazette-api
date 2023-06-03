@@ -20,7 +20,7 @@ func Up(serverCfg config.ServerCfg, dbConn db.Connection) {
 	address := fmt.Sprintf(":%s", serverCfg.Port)
 	err := http.ListenAndServe(address, logging(http.DefaultServeMux, infoLogger))
 
-	if err != nil {
+	if err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server launch error: %s", err)
 	}
 }
