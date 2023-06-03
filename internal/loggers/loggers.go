@@ -12,7 +12,7 @@ func InitializeDefaultLogger() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
 }
 
-// NewHTTPLogger sets the parameters for the HTTP requests logger.
-func NewHTTPLogger() *log.Logger {
+// NewInfoLogger sets the parameters for the info messages logger.
+func NewInfoLogger() *log.Logger {
 	return log.New(os.Stdout, "[INFO] ", log.Ldate|log.Ltime)
 }

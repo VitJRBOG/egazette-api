@@ -2,6 +2,7 @@ package harvester
 
 import (
 	"egazette-api/internal/db"
+	"egazette-api/internal/loggers"
 	"egazette-api/internal/sources/jpl"
 	"egazette-api/internal/sources/vestirama"
 	"log"
@@ -10,7 +11,9 @@ import (
 
 // Harvesting starts the articles gatherers.
 func Harvesting(dbConn db.Connection) {
-	log.Println("harvesting of articles is started")
+	infoLogger := loggers.NewInfoLogger()
+
+	infoLogger.Println("harvesting of articles is started")
 
 	for {
 		go harvest(dbConn)
