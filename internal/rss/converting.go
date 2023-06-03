@@ -1,28 +1,13 @@
 package rss
 
 import (
+	"egazette-api/internal/models"
 	"fmt"
 	"time"
 )
 
-// Source stores data about the source.
-type Source interface {
-	Name() string
-	HomeURL() string
-	DateFormat() string
-}
-
-// Article stores data about the article from the source.
-type Article interface {
-	URL() string
-	Date() string
-	Title() string
-	Description() string
-	CoverURL() string
-}
-
 // ComposeRSSFeed fetches article data from source and return it in RSS format.
-func ComposeRSSFeed(source Source, articles []Article) (RSS, error) {
+func ComposeRSSFeed(source models.Source, articles []models.Article) (RSS, error) {
 	r := RSS{}
 
 	r = putSourceInfo(r, source)
@@ -34,24 +19,24 @@ func ComposeRSSFeed(source Source, articles []Article) (RSS, error) {
 	return r, nil
 }
 
-func putSourceInfo(r RSS, source Source) RSS {
-	r.Channel.Title = source.Name()
-	r.Channel.Link = source.HomeURL()
+func putSourceInfo(r RSS, source models.Source) RSS {
+	r.Channel.Title = source.Name
+	r.Channel.Link = source.HomeURL
 
 	return r
 }
 
-func putArticleData(r RSS, source Source, articles []Article) (RSS, error) {
+func putArticleData(r RSS, source models.Source, articles []models.Article) (RSS, error) {
 	for _, article := range articles {
-		date, err := prepareDateForRSS(source.Name(), source.DateFormat(), article.Date())
+		date, err := prepareDateForRSS(source.Name, source.DateFormat, article.Date)
 		if err != nil {
 			return RSS{}, err
 		}
 
 		var rssItem = Item{
-			Title:       article.Title(),
-			Link:        article.URL(),
-			Description: fmt.Sprintf("<img src=\"%s\"><br>%s", article.CoverURL(), article.Description()),
+			Title:       article.Title,
+			Link:        article.URL,
+			Description: fmt.Sprintf("<img src=\"%s\"><br>%s", article.CoverURL, article.Description),
 			Date:        date,
 		}
 

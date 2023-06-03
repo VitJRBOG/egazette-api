@@ -2,6 +2,7 @@ package server
 
 import (
 	"egazette-api/internal/config"
+	"egazette-api/internal/db"
 	"egazette-api/internal/loggers"
 	"fmt"
 	"log"
@@ -10,10 +11,10 @@ import (
 )
 
 // Up starts the server.
-func Up(serverCfg config.ServerCfg) {
+func Up(serverCfg config.ServerCfg, dbConn db.Connection) {
 	httpLogger := loggers.NewHTTPLogger()
 
-	handling()
+	handling(dbConn)
 	httpLogger.Println("request handling is ready")
 
 	address := fmt.Sprintf(":%s", serverCfg.Port)

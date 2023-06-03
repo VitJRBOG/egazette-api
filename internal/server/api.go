@@ -1,6 +1,7 @@
 package server
 
 import (
+	"egazette-api/internal/db"
 	"egazette-api/internal/rss"
 	"egazette-api/internal/sources/jpl"
 	"egazette-api/internal/sources/vestirama"
@@ -22,7 +23,7 @@ func (e Error) Error() string {
 	return fmt.Sprintf("status %d: %s", e.HTTPStatus, e.Detail)
 }
 
-func handling() {
+func handling(dbConn db.Connection) {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -82,7 +83,7 @@ func handling() {
 	http.HandleFunc("/source/jpl/articles", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			rssFeed, err := jplArticles()
+			rssFeed, err := jplArticles(dbConn)
 
 			if err != nil {
 				sendError(w, err)
@@ -130,7 +131,7 @@ func handling() {
 	http.HandleFunc("/source/vestirama/articles", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			rssFeed, err := vestiramaArticles()
+			rssFeed, err := vestiramaArticles(dbConn)
 			if err != nil {
 				sendError(w, err)
 				return
@@ -220,24 +221,19 @@ func sendError(w http.ResponseWriter, reqError error) {
 	}
 }
 
-func jplArticles() (rss.RSS, error) {
+func jplArticles(dbConn db.Connection) (rss.RSS, error) {
 	source := jpl.GetSourceData()
-	articles, err := jpl.GetArticleData()
+
+	articles, err := db.SelectArticles(dbConn, source.Name)
 	if err != nil {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
 			HTTPStatus: http.StatusInternalServerError,
-			Detail:     "couldn't fetch data from JPL",
+			Detail:     "couldn't fetch data with JPL articles",
 		}
 	}
 
-	iArticles := make([]rss.Article, len(articles))
-
-	for i := range iArticles {
-		iArticles[i] = articles[i]
-	}
-
-	rssFeed, err := rss.ComposeRSSFeed(source, iArticles)
+	rssFeed, err := rss.ComposeRSSFeed(source, articles)
 	if err != nil {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
@@ -249,24 +245,19 @@ func jplArticles() (rss.RSS, error) {
 	return rssFeed, nil
 }
 
-func vestiramaArticles() (rss.RSS, error) {
+func vestiramaArticles(dbConn db.Connection) (rss.RSS, error) {
 	source := vestirama.GetSourceData()
-	articles, err := vestirama.GetArticleData()
+
+	articles, err := db.SelectArticles(dbConn, source.Name)
 	if err != nil {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
 			HTTPStatus: http.StatusInternalServerError,
-			Detail:     "couldn't fetch data from Vestirama",
+			Detail:     "couldn't fetch data with Vestirama articles",
 		}
 	}
 
-	iArticles := make([]rss.Article, len(articles))
-
-	for i := range iArticles {
-		iArticles[i] = articles[i]
-	}
-
-	rssFeed, err := rss.ComposeRSSFeed(source, iArticles)
+	rssFeed, err := rss.ComposeRSSFeed(source, articles)
 	if err != nil {
 		log.Println(err.Error())
 		return rss.RSS{}, Error{
