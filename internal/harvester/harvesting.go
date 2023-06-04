@@ -6,6 +6,7 @@ import (
 	"egazette-api/internal/sources/jpl"
 	"egazette-api/internal/sources/vestirama"
 	"log"
+	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -21,13 +22,13 @@ harvy:
 	for {
 		harvest(dbConn)
 
-		// FIXME: a randomiser for sleeping time should be described
-		// to send requests in a less conspicuous way.
+		n := rand.Intn(3600)
+		waitFor := 3600 + n
 
-		for i := 0; i < 360; i++ {
+		for i := 0; i < waitFor; i++ {
 			select {
 			case <-signalToExit:
-				i = 360
+				i = waitFor
 				break harvy
 			default:
 				time.Sleep(1 * time.Second)
