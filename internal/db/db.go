@@ -34,7 +34,7 @@ func NewConnection(dsn string) (Connection, error) {
 func InsertArticle(dbConn Connection, sourceName string, article models.Article) error {
 	query := "INSERT INTO article (url, date, title, description, cover_url, source_id) " +
 		"SELECT $1, $2, $3, $4, $5, (SELECT id FROM source WHERE name=$6) " +
-		"WHERE NOT EXISTS (SELECT 1 FROM article WHERE url='$1')"
+		"WHERE NOT EXISTS (SELECT id FROM article WHERE url=$1)"
 
 	// FIXME: need to describe an inserting for the multiple records.
 
