@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -33,4 +34,11 @@ func (a *Article) SetDate(referenceDateLayout, referenceDate string) error {
 	a.Date = strconv.FormatInt((date.Unix()), 10)
 
 	return nil
+}
+
+// SortArticlesByDate sorts the 'Article' slice by the 'Date' field.
+func SortArticlesByDate(articles []Article) {
+	sort.Slice(articles, func(i, j int) bool {
+		return articles[i].Date < articles[j].Date
+	})
 }

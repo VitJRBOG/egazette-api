@@ -35,6 +35,8 @@ func GetArticleData() ([]models.Article, error) {
 		return []models.Article{}, err
 	}
 
+	models.SortArticlesByDate(articles)
+
 	return articles, nil
 }
 
