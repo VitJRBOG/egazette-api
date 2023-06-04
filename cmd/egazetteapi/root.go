@@ -8,6 +8,10 @@ import (
 	"egazette-api/internal/server"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 )
 
 // Execute starts the main functions of the program.
@@ -35,9 +39,33 @@ func Execute() {
 		log.Fatalf("launching is not possible: %s", err)
 	}
 
-	// FIXME: It's crud. Need to describe an OS signals listener.
+	serverRepresentative, harvesterRepresentative := getCompletionHeralds()
 
-	go server.Up(serverCfg, dbConnection)
+	wg := sync.WaitGroup{}
 
-	harvester.Harvesting(dbConnection)
+	wg.Add(1)
+	go server.Up(&wg, serverRepresentative, serverCfg, dbConnection)
+
+	wg.Add(1)
+	go harvester.Harvesting(&wg, harvesterRepresentative, dbConnection)
+
+	wg.Add(1)
+	go osSignalsReception(&wg, serverRepresentative, harvesterRepresentative)
+
+	wg.Wait()
+	loggers.NewInfoLogger().Println("program exited successfully")
+}
+
+func getCompletionHeralds() (chan os.Signal, chan os.Signal) {
+	serverRepresentative := make(chan os.Signal, 1)
+	harvesterRepresentative := make(chan os.Signal, 1)
+
+	return serverRepresentative, harvesterRepresentative
+}
+
+func osSignalsReception(wg *sync.WaitGroup, serverRepresentative, harvesterRepresentative chan os.Signal) {
+	signal.Notify(serverRepresentative, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(harvesterRepresentative, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg.Done()
 }

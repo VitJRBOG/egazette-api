@@ -6,23 +6,37 @@ import (
 	"egazette-api/internal/sources/jpl"
 	"egazette-api/internal/sources/vestirama"
 	"log"
+	"os"
+	"sync"
 	"time"
 )
 
 // Harvesting starts the articles gatherers.
-func Harvesting(dbConn db.Connection) {
+func Harvesting(wg *sync.WaitGroup, signalToExit chan os.Signal, dbConn db.Connection) {
 	infoLogger := loggers.NewInfoLogger()
 
 	infoLogger.Println("harvesting of articles is started")
 
+harvy:
 	for {
-		go harvest(dbConn)
+		harvest(dbConn)
 
 		// FIXME: a randomiser for sleeping time should be described
 		// to send requests in a less conspicuous way.
 
-		time.Sleep(60 * time.Minute)
+		for i := 0; i < 360; i++ {
+			select {
+			case <-signalToExit:
+				i = 360
+				break harvy
+			default:
+				time.Sleep(1 * time.Second)
+			}
+		}
 	}
+
+	loggers.NewInfoLogger().Println("harvester exited successfully")
+	wg.Done()
 }
 
 func harvest(dbConn db.Connection) {
