@@ -5,6 +5,7 @@ import (
 	"egazette-api/internal/config"
 	"egazette-api/internal/db"
 	"egazette-api/internal/loggers"
+	"egazette-api/internal/models"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,13 +15,14 @@ import (
 )
 
 // Up starts the server.
-func Up(wg *sync.WaitGroup, signalToExit chan os.Signal, serverCfg config.ServerCfg, dbConn db.Connection) {
+func Up(wg *sync.WaitGroup, signalToExit chan os.Signal, serverCfg config.ServerCfg,
+	dbConn db.Connection, sources []models.Source) {
 	infoLogger := loggers.NewInfoLogger()
 	srv := serverSettingUp(serverCfg, infoLogger)
 
 	go waitForExitSignal(signalToExit, srv, infoLogger)
 
-	handling(dbConn)
+	handling(dbConn, sources)
 	infoLogger.Println("request handling is ready")
 
 	err := srv.ListenAndServe()

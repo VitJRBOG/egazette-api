@@ -2,9 +2,8 @@ package server
 
 import (
 	"egazette-api/internal/db"
+	"egazette-api/internal/models"
 	"egazette-api/internal/rss"
-	"egazette-api/internal/sources/jpl"
-	"egazette-api/internal/sources/vestirama"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -23,7 +22,7 @@ func (e Error) Error() string {
 	return fmt.Sprintf("status %d: %s", e.HTTPStatus, e.Detail)
 }
 
-func handling(dbConn db.Connection) {
+func handling(dbConn db.Connection, sources []models.Source) {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -65,14 +64,16 @@ func handling(dbConn db.Connection) {
 	http.HandleFunc("/source/jpl/info", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			description := "JPL is a research and development \n" +
-				"lab federally funded by NASA and managed by Caltech.\n\n"
-			sourceURL := "https://www.jpl.nasa.gov/news"
-			// FIXME: remove hardcoded info
+			source, err := jplInfo(sources)
+			if err != nil {
+				sendError(w, err)
+				return
+			}
 
 			sendData(w, http.StatusOK, []map[string]string{{
-				"description": description,
-				"url":         sourceURL,
+				"name":        source.Name,
+				"description": source.Description,
+				"url":         source.HomeURL,
 			}})
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
@@ -83,7 +84,7 @@ func handling(dbConn db.Connection) {
 	http.HandleFunc("/source/jpl/articles", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			rssFeed, err := jplArticles(dbConn)
+			rssFeed, err := jplArticles(dbConn, sources)
 
 			if err != nil {
 				sendError(w, err)
@@ -113,15 +114,17 @@ func handling(dbConn db.Connection) {
 	http.HandleFunc("/source/vestirama/info", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			description := "Оренбургская государственная телерадиовещательная компания."
-			sourceURL := "https://vestirama.ru/novosti/"
-			// FIXME: remove hardcoded info
+			source, err := vestiramaInfo(sources)
+			if err != nil {
+				sendError(w, err)
+				return
+			}
 
 			sendData(w, http.StatusOK, []map[string]string{{
-				"description": description,
-				"url":         sourceURL,
+				"name":        source.Name,
+				"description": source.Description,
+				"url":         source.HomeURL,
 			}})
-
 		default:
 			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
 			return
@@ -131,7 +134,7 @@ func handling(dbConn db.Connection) {
 	http.HandleFunc("/source/vestirama/articles", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			rssFeed, err := vestiramaArticles(dbConn)
+			rssFeed, err := vestiramaArticles(dbConn, sources)
 			if err != nil {
 				sendError(w, err)
 				return
@@ -221,8 +224,41 @@ func sendError(w http.ResponseWriter, reqError error) {
 	}
 }
 
-func jplArticles(dbConn db.Connection) (rss.RSS, error) {
-	source := jpl.GetSourceData()
+func jplInfo(sources []models.Source) (models.Source, error) {
+	source := models.FindSourceByAPIName(sources, "jpl")
+
+	if source.Name == "" && source.Description == "" && source.HomeURL == "" && source.APIName == "" {
+		return models.Source{}, Error{
+			HTTPStatus: http.StatusNoContent,
+			Detail:     "couldn't find data about JPL",
+		}
+	}
+
+	return source, nil
+}
+
+func vestiramaInfo(sources []models.Source) (models.Source, error) {
+	source := models.FindSourceByAPIName(sources, "vestirama")
+
+	if source.Name == "" && source.Description == "" && source.HomeURL == "" && source.APIName == "" {
+		return models.Source{}, Error{
+			HTTPStatus: http.StatusNoContent,
+			Detail:     "couldn't find data about Vestirama",
+		}
+	}
+
+	return source, nil
+}
+
+func jplArticles(dbConn db.Connection, sources []models.Source) (rss.RSS, error) {
+	source := models.FindSourceByAPIName(sources, "jpl")
+
+	if source.Name == "" && source.Description == "" && source.HomeURL == "" && source.APIName == "" {
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusNoContent,
+			Detail:     "couldn't find data about JPL",
+		}
+	}
 
 	articles, err := db.SelectArticles(dbConn, source.Name)
 	if err != nil {
@@ -245,8 +281,15 @@ func jplArticles(dbConn db.Connection) (rss.RSS, error) {
 	return rssFeed, nil
 }
 
-func vestiramaArticles(dbConn db.Connection) (rss.RSS, error) {
-	source := vestirama.GetSourceData()
+func vestiramaArticles(dbConn db.Connection, sources []models.Source) (rss.RSS, error) {
+	source := models.FindSourceByAPIName(sources, "vestirama")
+
+	if source.Name == "" && source.Description == "" && source.HomeURL == "" && source.APIName == "" {
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusNoContent,
+			Detail:     "couldn't find data about Vestirama",
+		}
+	}
 
 	articles, err := db.SelectArticles(dbConn, source.Name)
 	if err != nil {

@@ -77,3 +77,30 @@ func SelectArticles(dbConn Connection, sourceName string) ([]models.Article, err
 
 	return articles, nil
 }
+
+// SelectSources selects records from the "source" table.
+func SelectSources(dbConn Connection) ([]models.Source, error) {
+	query := "SELECT * FROM source"
+
+	rows, err := dbConn.Conn.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select a records from the 'source' table: %s", err)
+	}
+
+	sources := []models.Source{}
+
+	for rows.Next() {
+		source := models.Source{}
+
+		var id int
+
+		err := rows.Scan(&id, &source.Name, &source.Description, &source.HomeURL, &source.APIName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan rows from the 'source' table: %s", err)
+		}
+
+		sources = append(sources, source)
+	}
+
+	return sources, nil
+}

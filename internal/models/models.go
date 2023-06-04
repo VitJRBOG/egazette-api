@@ -9,9 +9,21 @@ import (
 
 // Source stores data about the source.
 type Source struct {
-	Name       string
-	HomeURL    string
-	DateFormat string
+	Name        string
+	Description string
+	HomeURL     string
+	APIName     string
+}
+
+// FindSourceByAPIName searches for an element by its 'APIName'.
+func FindSourceByAPIName(sources []Source, apiName string) Source {
+	for _, source := range sources {
+		if source.APIName == apiName {
+			return source
+		}
+	}
+
+	return Source{}
 }
 
 // Article stores data about the article from the source.

@@ -39,15 +39,24 @@ func Execute() {
 		log.Fatalf("launching is not possible: %s", err)
 	}
 
+	sources, err := db.SelectSources(dbConnection)
+	if err != nil {
+		log.Fatalf("launching is not possible: %s", err)
+	}
+
+	if len(sources) == 0 {
+		log.Fatalf("launching is not possible: no sources found")
+	}
+
 	serverRepresentative, harvesterRepresentative := getCompletionHeralds()
 
 	wg := sync.WaitGroup{}
 
 	wg.Add(1)
-	go server.Up(&wg, serverRepresentative, serverCfg, dbConnection)
+	go server.Up(&wg, serverRepresentative, serverCfg, dbConnection, sources)
 
 	wg.Add(1)
-	go harvester.Harvesting(&wg, harvesterRepresentative, dbConnection)
+	go harvester.Harvesting(&wg, harvesterRepresentative, dbConnection, sources)
 
 	wg.Add(1)
 	go osSignalsReception(&wg, serverRepresentative, harvesterRepresentative)

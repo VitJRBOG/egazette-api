@@ -12,15 +12,6 @@ import (
 // TargetURL stores source URL.
 const TargetURL = "https://vestirama.ru/novosti/"
 
-// GetSourceData returns a struct with data about source.
-func GetSourceData() models.Source {
-	return models.Source{
-		Name:       "Vestirama",
-		HomeURL:    "https://vestirama.ru",
-		DateFormat: "2.01.2006 15:04",
-	}
-}
-
 // GetArticleData parses articles from the website of source and returns them.
 func GetArticleData() ([]models.Article, error) {
 	htmlNode, err := sources.GetHTMLNode(TargetURL)

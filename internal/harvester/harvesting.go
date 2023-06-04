@@ -3,6 +3,7 @@ package harvester
 import (
 	"egazette-api/internal/db"
 	"egazette-api/internal/loggers"
+	"egazette-api/internal/models"
 	"egazette-api/internal/sources/jpl"
 	"egazette-api/internal/sources/vestirama"
 	"log"
@@ -13,14 +14,15 @@ import (
 )
 
 // Harvesting starts the articles gatherers.
-func Harvesting(wg *sync.WaitGroup, signalToExit chan os.Signal, dbConn db.Connection) {
+func Harvesting(wg *sync.WaitGroup, signalToExit chan os.Signal, dbConn db.Connection,
+	sources []models.Source) {
 	infoLogger := loggers.NewInfoLogger()
 
 	infoLogger.Println("harvesting of articles is started")
 
 harvy:
 	for {
-		harvest(dbConn)
+		harvest(dbConn, sources)
 
 		n := rand.Intn(3600)
 		waitFor := 3600 + n
@@ -40,27 +42,28 @@ harvy:
 	wg.Done()
 }
 
-func harvest(dbConn db.Connection) {
-	err := harvestTheJPLArticles(dbConn)
+func harvest(dbConn db.Connection, sources []models.Source) {
+	err := harvestTheJPLArticles(dbConn, sources)
 	if err != nil {
 		log.Printf("failed to harvest an articles from the JPL website: %s", err)
 	}
 
-	err = harvestTheVestiramaArticles(dbConn)
+	err = harvestTheVestiramaArticles(dbConn, sources)
 	if err != nil {
 		log.Printf("failed to harvest an articles from the Vestirama website: %s", err)
 	}
 }
 
-func harvestTheJPLArticles(dbConn db.Connection) error {
+func harvestTheJPLArticles(dbConn db.Connection, sources []models.Source) error {
+	source := models.FindSourceByAPIName(sources, "jpl")
+
 	articles, err := jpl.GetArticleData()
 	if err != nil {
 		return err
 	}
 
-	sourceName := jpl.GetSourceData().Name
 	for _, article := range articles {
-		err := db.InsertArticle(dbConn, sourceName, article)
+		err := db.InsertArticle(dbConn, source.Name, article)
 		if err != nil {
 			return err
 		}
@@ -69,15 +72,16 @@ func harvestTheJPLArticles(dbConn db.Connection) error {
 	return nil
 }
 
-func harvestTheVestiramaArticles(dbConn db.Connection) error {
+func harvestTheVestiramaArticles(dbConn db.Connection, sources []models.Source) error {
+	source := models.FindSourceByAPIName(sources, "vestirama")
+
 	articles, err := vestirama.GetArticleData()
 	if err != nil {
 		return err
 	}
 
-	sourceName := vestirama.GetSourceData().Name
 	for _, article := range articles {
-		err := db.InsertArticle(dbConn, sourceName, article)
+		err := db.InsertArticle(dbConn, source.Name, article)
 		if err != nil {
 			return err
 		}

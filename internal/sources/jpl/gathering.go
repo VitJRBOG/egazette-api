@@ -12,15 +12,6 @@ import (
 // TargetURL stores source URL.
 const TargetURL = "https://www.jpl.nasa.gov/news"
 
-// GetSourceData returns a struct with data about source.
-func GetSourceData() models.Source {
-	return models.Source{
-		Name:       "Jet Propulsion Laboratory",
-		HomeURL:    "https://www.jpl.nasa.gov",
-		DateFormat: "January 2, 2006",
-	}
-}
-
 // GetArticleData parses articles from the website of source and returns them.
 func GetArticleData() ([]models.Article, error) {
 	htmlNode, err := sources.GetHTMLNode(TargetURL)
