@@ -29,15 +29,28 @@ func putSourceInfo(r RSS, source models.Source) RSS {
 
 func putArticleData(r RSS, source models.Source, articles []models.Article) (RSS, error) {
 	for _, article := range articles {
-		date, err := prepareUnixTSForRSS(article.Date)
-		if err != nil {
-			return RSS{}, err
+		var err error
+		date := ""
+		if article.Date != "" {
+			date, err = prepareUnixTSForRSS(article.Date)
+			if err != nil {
+				return RSS{}, err
+			}
+		}
+
+		description := ""
+		if article.CoverURL != "" {
+			description += fmt.Sprintf("<img src=\"%s\">", article.CoverURL)
+		}
+
+		if article.Description != "" {
+			description += fmt.Sprintf("<br>%s", article.Description)
 		}
 
 		var rssItem = Item{
 			Title:       article.Title,
 			Link:        article.URL,
-			Description: fmt.Sprintf("<img src=\"%s\"><br>%s", article.CoverURL, article.Description),
+			Description: description,
 			Date:        date,
 		}
 
