@@ -5,6 +5,7 @@ import (
 	"egazette-api/internal/loggers"
 	"egazette-api/internal/models"
 	"egazette-api/internal/sources/jpl"
+	"egazette-api/internal/sources/natgeo"
 	"egazette-api/internal/sources/vestirama"
 	"log"
 	"math/rand"
@@ -52,6 +53,11 @@ func harvest(dbConn db.Connection, sources []models.Source) {
 	if err != nil {
 		log.Printf("failed to harvest an articles from the Vestirama website: %s", err)
 	}
+
+	err = harvestTheNatGeoArticles(dbConn, sources)
+	if err != nil {
+		log.Printf("failed to harvest an articles from the NatGeo website: %s", err)
+	}
 }
 
 func harvestTheJPLArticles(dbConn db.Connection, sources []models.Source) error {
@@ -76,6 +82,24 @@ func harvestTheVestiramaArticles(dbConn db.Connection, sources []models.Source) 
 	source := models.FindSourceByAPIName(sources, "vestirama")
 
 	articles, err := vestirama.GetArticleData()
+	if err != nil {
+		return err
+	}
+
+	for _, article := range articles {
+		err := db.InsertArticle(dbConn, source.Name, article)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func harvestTheNatGeoArticles(dbConn db.Connection, sources []models.Source) error {
+	source := models.FindSourceByAPIName(sources, "natgeo")
+
+	articles, err := natgeo.GetArticleData()
 	if err != nil {
 		return err
 	}

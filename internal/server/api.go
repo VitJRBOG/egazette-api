@@ -146,6 +146,55 @@ func handling(dbConn db.Connection, sources []models.Source) {
 			return
 		}
 	})
+
+	http.HandleFunc("/source/natgeo", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			text := fmt.Sprintf("%s/source/natgeo/info - about source\n%s/source/natgeo/articles - list of articles",
+				r.Host, r.Host)
+
+			sendText(w, http.StatusOK, text)
+		default:
+			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
+			return
+		}
+	})
+
+	http.HandleFunc("/source/natgeo/info", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			source, err := natgeoInfo(sources)
+			if err != nil {
+				sendError(w, err)
+				return
+			}
+
+			sendData(w, http.StatusOK, []map[string]string{{
+				"name":        source.Name,
+				"description": source.Description,
+				"url":         source.HomeURL,
+			}})
+		default:
+			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
+			return
+		}
+	})
+
+	http.HandleFunc("/source/natgeo/articles", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			rssFeed, err := natgeoArticles(dbConn, sources)
+			if err != nil {
+				sendError(w, err)
+				return
+			}
+
+			sendRSSFeed(w, rssFeed)
+		default:
+			sendError(w, Error{http.StatusMethodNotAllowed, "method not allowed"})
+			return
+		}
+	})
 }
 
 func sendText(w http.ResponseWriter, status int, text string) {
@@ -250,6 +299,19 @@ func vestiramaInfo(sources []models.Source) (models.Source, error) {
 	return source, nil
 }
 
+func natgeoInfo(sources []models.Source) (models.Source, error) {
+	source := models.FindSourceByAPIName(sources, "natgeo")
+
+	if source.Name == "" && source.Description == "" && source.HomeURL == "" && source.APIName == "" {
+		return models.Source{}, Error{
+			HTTPStatus: http.StatusNoContent,
+			Detail:     "couldn't find data about NatGeo",
+		}
+	}
+
+	return source, nil
+}
+
 func jplArticles(dbConn db.Connection, sources []models.Source) (rss.RSS, error) {
 	source := models.FindSourceByAPIName(sources, "jpl")
 
@@ -306,6 +368,37 @@ func vestiramaArticles(dbConn db.Connection, sources []models.Source) (rss.RSS, 
 		return rss.RSS{}, Error{
 			HTTPStatus: http.StatusInternalServerError,
 			Detail:     "couldn't compose RSS feed with Vestirama articles",
+		}
+	}
+
+	return rssFeed, nil
+}
+
+func natgeoArticles(dbConn db.Connection, sources []models.Source) (rss.RSS, error) {
+	source := models.FindSourceByAPIName(sources, "natgeo")
+
+	if source.Name == "" && source.Description == "" && source.HomeURL == "" && source.APIName == "" {
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusNoContent,
+			Detail:     "couldn't find data about NatGeo",
+		}
+	}
+
+	articles, err := db.SelectArticles(dbConn, source.Name)
+	if err != nil {
+		log.Println(err.Error())
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusInternalServerError,
+			Detail:     "couldn't fetch data with NatGeo articles",
+		}
+	}
+
+	rssFeed, err := rss.ComposeRSSFeed(source, articles)
+	if err != nil {
+		log.Println(err.Error())
+		return rss.RSS{}, Error{
+			HTTPStatus: http.StatusInternalServerError,
+			Detail:     "couldn't compose RSS feed with NatGeo articles",
 		}
 	}
 
