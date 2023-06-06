@@ -22,3 +22,4 @@ _`8000` is the default port. You can replace it with another port in the `docker
 
 -   [Jet Propulsion Laboratory](https://www.jpl.nasa.gov) News: `jpl`
 -   [Vestirama](https://vestirama.ru) News: `vestirama`
+-   [National Geographic](https://www.nationalgeographic.com) News: `natgeo`
