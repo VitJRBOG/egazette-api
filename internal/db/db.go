@@ -32,14 +32,15 @@ func NewConnection(dsn string) (Connection, error) {
 
 // InsertArticle inserts a new record into the "article" table.
 func InsertArticle(dbConn Connection, sourceName string, article models.Article) error {
-	query := "INSERT INTO article (url, date, title, description, cover_url, source_id) " +
-		"SELECT $1, $2, $3, $4, $5, (SELECT id FROM source WHERE name=$6) " +
+	query := "INSERT INTO article (url, pub_date, title, description, cover_url, add_date, source_id) " +
+		"SELECT $1, $2, $3, $4, $5, $6, (SELECT id FROM source WHERE name=$7) " +
 		"WHERE NOT EXISTS (SELECT id FROM article WHERE url=$1)"
 
 	// FIXME: need to describe an inserting for the multiple records.
 
 	_, err := dbConn.Conn.Exec(query,
-		article.URL, article.Date, article.Title, article.Description, article.CoverURL, sourceName)
+		article.URL, article.PubDate, article.Title, article.Description,
+		article.CoverURL, article.AddDate, sourceName)
 	if err != nil {
 		return fmt.Errorf("failed to insert a record into the 'article' table: %s", err)
 	}
@@ -66,8 +67,8 @@ func SelectArticles(dbConn Connection, sourceName string) ([]models.Article, err
 
 		var id, sourceID int
 
-		err := rows.Scan(&id, &article.URL, &article.Date, &article.Title,
-			&article.Description, &article.CoverURL, &sourceID)
+		err := rows.Scan(&id, &article.URL, &article.PubDate, &article.Title,
+			&article.Description, &article.CoverURL, &article.AddDate, &sourceID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan rows from the 'article' table: %s", err)
 		}

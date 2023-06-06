@@ -31,8 +31,8 @@ func putArticleData(r RSS, source models.Source, articles []models.Article) (RSS
 	for _, article := range articles {
 		var err error
 		date := ""
-		if article.Date != "" {
-			date, err = prepareUnixTSForRSS(article.Date)
+		if article.PubDate != "" {
+			date, err = prepareUnixTSForRSS(article.PubDate)
 			if err != nil {
 				return RSS{}, err
 			}

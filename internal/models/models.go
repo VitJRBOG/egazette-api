@@ -29,10 +29,11 @@ func FindSourceByAPIName(sources []Source, apiName string) Source {
 // Article stores data about the article from the source.
 type Article struct {
 	URL         string
-	Date        string
+	PubDate     string
 	Title       string
 	Description string
 	CoverURL    string
+	AddDate     string
 }
 
 // SetDate converts the date str into a unix timestamp str and sets it in the Date field.
@@ -43,7 +44,7 @@ func (a *Article) SetDate(referenceDateLayout, referenceDate string) error {
 			referenceDate, referenceDateLayout, err.Error())
 	}
 
-	a.Date = strconv.FormatInt((date.Unix()), 10)
+	a.PubDate = strconv.FormatInt((date.Unix()), 10)
 
 	return nil
 }
@@ -51,6 +52,6 @@ func (a *Article) SetDate(referenceDateLayout, referenceDate string) error {
 // SortArticlesByDate sorts the 'Article' slice by the 'Date' field.
 func SortArticlesByDate(articles []Article) {
 	sort.Slice(articles, func(i, j int) bool {
-		return articles[i].Date < articles[j].Date
+		return articles[i].PubDate < articles[j].PubDate
 	})
 }

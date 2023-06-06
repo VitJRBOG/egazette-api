@@ -14,10 +14,11 @@ CREATE TABLE source (
 CREATE TABLE article (
     id SERIAL NOT NULL,
     url TEXT,
-    date TEXT,
+    pub_date TEXT,
     title TEXT,
     description TEXT,
     cover_url TEXT,
+    add_date TEXT,
     source_id INTEGER,
     PRIMARY KEY (id),
     CONSTRAINT fk_source FOREIGN KEY (source_id) REFERENCES source (id)

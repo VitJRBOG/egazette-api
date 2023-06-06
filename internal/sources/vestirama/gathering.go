@@ -4,7 +4,9 @@ import (
 	"egazette-api/internal/models"
 	"egazette-api/internal/sources"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -74,6 +76,8 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, 
 		return models.Article{}, fmt.Errorf("failed to extract tag attributes of the '%s' article: %s",
 			article.Title, err)
 	}
+
+	article.AddDate = strconv.FormatInt((time.Now().UTC().Unix()), 10)
 
 	return article, nil
 }

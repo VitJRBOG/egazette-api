@@ -4,7 +4,9 @@ import (
 	"egazette-api/internal/models"
 	"egazette-api/internal/sources"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -74,6 +76,8 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, 
 
 	tagOfArticleCoverURL := tagOfArticleInfo.FirstChild.NextSibling.NextSibling.NextSibling.NextSibling.FirstChild.FirstChild.FirstChild.FirstChild
 	article.CoverURL = extractCoverURL(tagOfArticleCoverURL)
+
+	article.AddDate = strconv.FormatInt((time.Now().UTC().Unix()), 10)
 
 	return article, nil
 }

@@ -3,6 +3,8 @@ package natgeo
 import (
 	"egazette-api/internal/models"
 	"egazette-api/internal/sources"
+	"strconv"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -69,6 +71,8 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, 
 	// TODO: describe the extraction of the date of publication
 	// TODO: describe the extraction of the article cover URL
 	// TODO: describe the extraction of the description
+
+	article.AddDate = strconv.FormatInt((time.Now().UTC().Unix()), 10)
 
 	return article, nil
 }
