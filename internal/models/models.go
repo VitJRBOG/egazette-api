@@ -13,6 +13,7 @@ type Source struct {
 	Description string
 	HomeURL     string
 	APIName     string
+	MaxArticles string
 }
 
 // FindSourceByAPIName searches for an element by its 'APIName'.

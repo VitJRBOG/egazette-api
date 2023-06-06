@@ -8,6 +8,7 @@ CREATE TABLE source (
     description TEXT,
     home_url TEXT,
     api_name TEXT NOT NULL UNIQUE,
+    max_articles INTEGER,
     PRIMARY KEY (id)
 );
 
@@ -24,7 +25,7 @@ CREATE TABLE article (
     CONSTRAINT fk_source FOREIGN KEY (source_id) REFERENCES source (id)
 );
 
-INSERT INTO source (name, description, home_url, api_name) VALUES 
-    ('Jet Propulsion Laboratory', 'JPL is a research and development lab federally funded by NASA and managed by Caltech.', 'https://www.jpl.nasa.gov', 'jpl'),
-    ('Vestirama', 'Оренбургская государственная телерадиовещательная компания.', 'https://vestirama.ru', 'vestirama'),
-    ('National Geographic', 'A world leader in geography, cartography and exploration.', 'https://www.nationalgeographic.com', 'natgeo');
+INSERT INTO source (name, description, home_url, api_name, max_articles) VALUES 
+    ('Jet Propulsion Laboratory', 'JPL is a research and development lab federally funded by NASA and managed by Caltech.', 'https://www.jpl.nasa.gov', 'jpl', 100),
+    ('Vestirama', 'Оренбургская государственная телерадиовещательная компания.', 'https://vestirama.ru', 'vestirama', 100),
+    ('National Geographic', 'A world leader in geography, cartography and exploration.', 'https://www.nationalgeographic.com', 'natgeo', 100);

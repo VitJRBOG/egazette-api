@@ -24,6 +24,7 @@ func Harvesting(wg *sync.WaitGroup, signalToExit chan os.Signal, dbConn db.Conne
 harvy:
 	for {
 		harvest(dbConn, sources)
+		cleaning(dbConn, sources)
 
 		n := rand.Intn(3600)
 		waitFor := 3600 + n
@@ -109,6 +110,56 @@ func harvestTheNatGeoArticles(dbConn db.Connection, sources []models.Source) err
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func cleaning(dbConn db.Connection, sources []models.Source) {
+	err := clearTheJPLArticlesList(dbConn, sources)
+	if err != nil {
+		log.Printf("failed to clear JPL articles: %s", err)
+	}
+
+	err = clearTheVestiramaArticlesList(dbConn, sources)
+	if err != nil {
+		log.Printf("failed to clear Vestirama articles: %s", err)
+	}
+
+	err = clearTheNatGeoArticlesList(dbConn, sources)
+	if err != nil {
+		log.Printf("failed to clear NatGeo articles: %s", err)
+	}
+}
+
+func clearTheJPLArticlesList(dbConn db.Connection, sources []models.Source) error {
+	source := models.FindSourceByAPIName(sources, "jpl")
+
+	err := db.DeleteOldArticles(dbConn, source)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func clearTheVestiramaArticlesList(dbConn db.Connection, sources []models.Source) error {
+	source := models.FindSourceByAPIName(sources, "vestirama")
+
+	err := db.DeleteOldArticles(dbConn, source)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func clearTheNatGeoArticlesList(dbConn db.Connection, sources []models.Source) error {
+	source := models.FindSourceByAPIName(sources, "natgeo")
+
+	err := db.DeleteOldArticles(dbConn, source)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -79,6 +79,23 @@ func SelectArticles(dbConn Connection, sourceName string) ([]models.Article, err
 	return articles, nil
 }
 
+// DeleteOldArticles removes old articles from the "article" table by their "article.source_id"
+// if their number is greater than "source.max_articles".
+func DeleteOldArticles(dbConn Connection, source models.Source) error {
+	query := "DELETE FROM article " +
+		"WHERE source_id = (SELECT id FROM source WHERE api_name = $1) " +
+		"AND id NOT IN (SELECT id FROM article " +
+		"WHERE source_id = (SELECT id FROM source WHERE api_name = $1) " +
+		"ORDER BY add_date DESC, pub_date DESC LIMIT $2)"
+
+	_, err := dbConn.Conn.Exec(query, source.APIName, source.MaxArticles)
+	if err != nil {
+		return fmt.Errorf("failed to delete a records from the 'article' table: %s", err)
+	}
+
+	return nil
+}
+
 // SelectSources selects records from the "source" table.
 func SelectSources(dbConn Connection) ([]models.Source, error) {
 	query := "SELECT * FROM source"
@@ -95,7 +112,8 @@ func SelectSources(dbConn Connection) ([]models.Source, error) {
 
 		var id int
 
-		err := rows.Scan(&id, &source.Name, &source.Description, &source.HomeURL, &source.APIName)
+		err := rows.Scan(&id, &source.Name, &source.Description, &source.HomeURL,
+			&source.APIName, &source.MaxArticles)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan rows from the 'source' table: %s", err)
 		}
