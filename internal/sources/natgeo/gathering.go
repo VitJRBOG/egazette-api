@@ -3,7 +3,10 @@ package natgeo
 import (
 	"egazette-api/internal/models"
 	"egazette-api/internal/sources"
+	"fmt"
+	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/net/html"
@@ -68,7 +71,17 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, 
 	tagOfArticleURL := tagOfArticleAnnouncement.FirstChild.FirstChild.FirstChild
 	article.URL = extractURL(tagOfArticleURL)
 
-	// TODO: describe the extraction of the date of publication
+	dateLayout, date, err := extractDate(article.URL)
+	if err != nil {
+		return models.Article{}, fmt.Errorf("failed to extract the pub date of '%s' article: %s",
+			article.URL, err)
+	}
+	err = article.SetDate(dateLayout, date)
+	if err != nil {
+		return models.Article{}, fmt.Errorf("failed to convert the pub date of '%s' article: %s",
+			article.URL, err)
+	}
+
 	// TODO: describe the extraction of the article cover URL
 	// TODO: describe the extraction of the description
 
@@ -83,4 +96,21 @@ func extractURL(tag *html.Node) string {
 
 func extractTitle(tag *html.Node) string {
 	return tag.Attr[1].Val
+}
+
+func extractDate(targetURL string) (string, string, error) {
+	dateLayout := "January 2, 2006 -0700"
+
+	time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
+
+	htmlNode, err := sources.GetHTMLNode(targetURL)
+	if err != nil {
+		return "", "", err
+	}
+
+	tagOfArticlePubDate := sources.FindTag(htmlNode, "class", "Byline__Meta Byline__Meta--publishDate").FirstChild
+
+	date := fmt.Sprintf("%s +0000", strings.Replace(tagOfArticlePubDate.Data, "Published ", "", 1))
+
+	return dateLayout, date, nil
 }
