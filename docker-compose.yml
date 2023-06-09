@@ -3,7 +3,7 @@ services:
     build:
       context: ./
       dockerfile: ./docker/psql/Dockerfile
-    container_name: egazette_psql
+    container_name: egazette-psql
     ports:
       - 5432:5432
     environment:
