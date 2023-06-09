@@ -43,8 +43,12 @@ func putArticleData(r RSS, source models.Source, articles []models.Article) (RSS
 			description += fmt.Sprintf("<img src=\"%s\">", article.CoverURL)
 		}
 
+		if article.CoverURL != "" && article.Description != "" {
+			description += "<br>"
+		}
+
 		if article.Description != "" {
-			description += fmt.Sprintf("<br>%s", article.Description)
+			description += article.Description
 		}
 
 		var rssItem = Item{
