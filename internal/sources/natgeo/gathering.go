@@ -71,19 +71,10 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, 
 	tagOfArticleURL := tagOfArticleAnnouncement.FirstChild.FirstChild.FirstChild
 	article.URL = extractURL(tagOfArticleURL)
 
-	dateLayout, date, err := extractDate(article.URL)
+	article, err := extractDataFromArticlePage(article)
 	if err != nil {
-		return models.Article{}, fmt.Errorf("failed to extract the pub date of '%s' article: %s",
-			article.URL, err)
-	}
-	err = article.SetDate(dateLayout, date)
-	if err != nil {
-		return models.Article{}, fmt.Errorf("failed to convert the pub date of '%s' article: %s",
-			article.URL, err)
-	}
 
-	// TODO: describe the extraction of the article cover URL
-	// TODO: describe the extraction of the description
+	}
 
 	article.AddDate = strconv.FormatInt((time.Now().UTC().Unix()), 10)
 
@@ -98,19 +89,37 @@ func extractTitle(tag *html.Node) string {
 	return tag.Attr[1].Val
 }
 
-func extractDate(targetURL string) (string, string, error) {
-	dateLayout := "January 2, 2006 -0700"
-
+func extractDataFromArticlePage(article models.Article) (models.Article, error) {
 	time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 
-	htmlNode, err := sources.GetHTMLNode(targetURL)
+	htmlNode, err := sources.GetHTMLNode(article.URL)
 	if err != nil {
-		return "", "", err
+		return models.Article{}, err
 	}
 
 	tagOfArticlePubDate := sources.FindTag(htmlNode, "class", "Byline__Meta Byline__Meta--publishDate").FirstChild
 
-	date := fmt.Sprintf("%s +0000", strings.Replace(tagOfArticlePubDate.Data, "Published ", "", 1))
+	dateLayout, date, err := extractDate(tagOfArticlePubDate)
+	if err != nil {
+		return models.Article{}, fmt.Errorf("failed to extract the pub date of '%s' article: %s",
+			article.URL, err)
+	}
+	err = article.SetDate(dateLayout, date)
+	if err != nil {
+		return models.Article{}, fmt.Errorf("failed to convert the pub date of '%s' article: %s",
+			article.URL, err)
+	}
+
+	// TODO: describe the extraction of the article cover URL
+	// TODO: describe the extraction of the description
+
+	return article, nil
+}
+
+func extractDate(tag *html.Node) (string, string, error) {
+	dateLayout := "January 2, 2006 -0700"
+
+	date := fmt.Sprintf("%s +0000", strings.Replace(tag.Data, "Published ", "", 1))
 
 	return dateLayout, date, nil
 }
