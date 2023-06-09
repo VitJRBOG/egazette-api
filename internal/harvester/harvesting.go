@@ -45,20 +45,54 @@ harvy:
 }
 
 func harvest(dbConn db.Connection, sources []models.Source) {
-	err := harvestTheJPLArticles(dbConn, sources)
-	if err != nil {
-		log.Printf("failed to harvest an articles from the JPL website: %s", err)
-	}
+	wg := sync.WaitGroup{}
 
-	err = harvestTheVestiramaArticles(dbConn, sources)
-	if err != nil {
-		log.Printf("failed to harvest an articles from the Vestirama website: %s", err)
-	}
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("JPL harvester recovered from the panic: %s", r)
+			}
+		}()
 
-	err = harvestTheNatGeoArticles(dbConn, sources)
-	if err != nil {
-		log.Printf("failed to harvest an articles from the NatGeo website: %s", err)
-	}
+		err := harvestTheJPLArticles(dbConn, sources)
+		if err != nil {
+			log.Printf("failed to harvest an articles from the JPL website: %s", err)
+		}
+	}(&wg)
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Vestirama harvester recovered from the panic: %s", r)
+			}
+		}()
+
+		err := harvestTheVestiramaArticles(dbConn, sources)
+		if err != nil {
+			log.Printf("failed to harvest an articles from the Vestirama website: %s", err)
+		}
+	}(&wg)
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("NatGeo harvester recovered from the panic: %s", r)
+			}
+		}()
+
+		err := harvestTheNatGeoArticles(dbConn, sources)
+		if err != nil {
+			log.Printf("failed to harvest an articles from the NatGeo website: %s", err)
+		}
+	}(&wg)
+
+	wg.Wait()
 }
 
 func harvestTheJPLArticles(dbConn db.Connection, sources []models.Source) error {
