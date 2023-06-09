@@ -110,8 +110,10 @@ func extractDataFromArticlePage(article models.Article) (models.Article, error) 
 			article.URL, err)
 	}
 
+	tagOfArticleDescription := sources.FindTag(htmlNode, "class", "Article__Headline__Desc")
+	article.Description = extractDescription(tagOfArticleDescription.FirstChild)
+
 	// TODO: describe the extraction of the article cover URL
-	// TODO: describe the extraction of the description
 
 	return article, nil
 }
@@ -122,4 +124,8 @@ func extractDate(tag *html.Node) (string, string, error) {
 	date := fmt.Sprintf("%s +0000", strings.Replace(tag.Data, "Published ", "", 1))
 
 	return dateLayout, date, nil
+}
+
+func extractDescription(tag *html.Node) string {
+	return tag.Data
 }
