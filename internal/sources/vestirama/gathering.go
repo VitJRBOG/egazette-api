@@ -59,22 +59,24 @@ func composeArticles(tagOfArticleAnnouncement *html.Node) ([]models.Article, err
 func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, error) {
 	article := models.Article{}
 
-	tagOfArticleCoverURL := tagOfArticleAnnouncement.FirstChild.NextSibling.FirstChild
-	article.CoverURL = extractCoverURL(tagOfArticleCoverURL)
+	tagOfArticleCoverURL := sources.FindTag(tagOfArticleAnnouncement, "class", "news-item_img")
+	if tagOfArticleCoverURL != nil {
+		article.CoverURL = extractCoverURL(tagOfArticleCoverURL.FirstChild)
+	}
 
-	tagOfArticleTextInfo := tagOfArticleAnnouncement.FirstChild.NextSibling.NextSibling.NextSibling
+	tagOfArticleTextInfo := sources.FindTag(tagOfArticleAnnouncement, "class", "news-item_title")
+	if tagOfArticleTextInfo != nil {
+		article.URL = extractURL(tagOfArticleTextInfo)
+		article.Title = extractTitle(tagOfArticleTextInfo.FirstChild)
+	}
 
-	tagOfArticleURL := tagOfArticleTextInfo.FirstChild.NextSibling.NextSibling.NextSibling
-	article.URL = extractURL(tagOfArticleURL)
-
-	tagOfArticleTitle := tagOfArticleTextInfo.FirstChild.NextSibling.NextSibling.NextSibling.FirstChild
-	article.Title = extractTitle(tagOfArticleTitle)
-
-	tagOfArticleDate := tagOfArticleTextInfo.FirstChild.NextSibling.FirstChild.NextSibling.FirstChild
-	err := article.SetDate(extractDate(tagOfArticleDate))
-	if err != nil {
-		return models.Article{}, fmt.Errorf("failed to extract tag attributes of the '%s' article: %s",
-			article.Title, err)
+	tagOfArticleDate := sources.FindTag(tagOfArticleAnnouncement, "class", "news-item_date")
+	if tagOfArticleDate != nil {
+		err := article.SetDate(extractDate(tagOfArticleDate.FirstChild))
+		if err != nil {
+			return models.Article{}, fmt.Errorf("failed to extract tag attributes of the '%s' article: %s",
+				article.Title, err)
+		}
 	}
 
 	article.AddDate = strconv.FormatInt((time.Now().UTC().Unix()), 10)
@@ -83,6 +85,10 @@ func extractTagAttributes(tagOfArticleAnnouncement *html.Node) (models.Article, 
 }
 
 func extractURL(tag *html.Node) string {
+	if len(tag.Attr) == 0 {
+		return ""
+	}
+
 	articleURL := tag.Attr[0].Val
 
 	return fmt.Sprintf("%s%s", strings.Replace(TargetURL, "novosti/", "", 1), articleURL)
@@ -103,6 +109,10 @@ func extractTitle(tag *html.Node) string {
 }
 
 func extractCoverURL(tag *html.Node) string {
+	if len(tag.Attr) == 0 {
+		return ""
+	}
+
 	coverURL := tag.Attr[0].Val
 
 	fullSizeImageURL := composeURLToFullSizeCoverImage(coverURL)
