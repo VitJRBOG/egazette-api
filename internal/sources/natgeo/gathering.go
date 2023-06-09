@@ -113,7 +113,8 @@ func extractDataFromArticlePage(article models.Article) (models.Article, error) 
 	tagOfArticleDescription := sources.FindTag(htmlNode, "class", "Article__Headline__Desc")
 	article.Description = extractDescription(tagOfArticleDescription.FirstChild)
 
-	// TODO: describe the extraction of the article cover URL
+	tagOfArticleCover := sources.FindTag(htmlNode, "class", "Image__Wrapper ")
+	article.CoverURL = extractCoverURL(tagOfArticleCover)
 
 	return article, nil
 }
@@ -128,4 +129,12 @@ func extractDate(tag *html.Node) (string, string, error) {
 
 func extractDescription(tag *html.Node) string {
 	return tag.Data
+}
+
+func extractCoverURL(tag *html.Node) string {
+	tagOfArticleCoverURL := tag.FirstChild.LastChild.PrevSibling
+
+	tagAttr := tagOfArticleCoverURL.Attr[0].Val
+
+	return strings.Split(tagAttr, ",")[0]
 }
