@@ -24,7 +24,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      - POSTGRES_HOST_ADDRESS=host.docker.internal
+      - POSTGRES_HOST_ADDRESS=egazette-psql
       - POSTGRES_HOST_PORT=5432
       - SERVER_PORT=8000
       - POSTGRES_USER=postgres
