@@ -3,10 +3,10 @@ package natgeo
 import (
 	"egazette-api/internal/models"
 	"egazette-api/internal/sources"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strconv"
-	"strings"
 	"time"
 
 	"golang.org/x/net/html"
@@ -97,44 +97,65 @@ func extractDataFromArticlePage(article models.Article) (models.Article, error) 
 		return models.Article{}, err
 	}
 
-	tagOfArticlePubDate := sources.FindTag(htmlNode, "class", "Byline__Meta Byline__Meta--publishDate").FirstChild
+	tagOfArticleDate := sources.FindTag(htmlNode, "type", "application/ld+json").FirstChild
 
-	dateLayout, date, err := extractDate(tagOfArticlePubDate)
+	articleData := map[string]interface{}{}
+	err = json.Unmarshal([]byte(tagOfArticleDate.Data), &articleData)
 	if err != nil {
-		return models.Article{}, fmt.Errorf("failed to extract the pub date of '%s' article: %s",
-			article.URL, err)
-	}
-	err = article.SetDate(dateLayout, date)
-	if err != nil {
-		return models.Article{}, fmt.Errorf("failed to convert the pub date of '%s' article: %s",
-			article.URL, err)
+		return models.Article{}, fmt.Errorf("failed to unmarshal the '%s' article data: %s", article.URL, err)
 	}
 
-	tagOfArticleDescription := sources.FindTag(htmlNode, "class", "Article__Headline__Desc")
-	article.Description = extractDescription(tagOfArticleDescription.FirstChild)
+	article.Description = extractDescription(articleData)
 
-	tagOfArticleCover := sources.FindTag(htmlNode, "class", "Image__Wrapper ")
-	article.CoverURL = extractCoverURL(tagOfArticleCover)
+	article.CoverURL = extractCoverURL(articleData)
+
+	dateLayout, date := extractDate(articleData)
+
+	if dateLayout != "" && date != "" {
+		err := article.SetDate(dateLayout, date)
+		if err != nil {
+			return models.Article{}, fmt.Errorf("failed to extract pub date of the '%s' article: %s",
+				article.URL, err)
+		}
+	}
 
 	return article, nil
 }
 
-func extractDate(tag *html.Node) (string, string, error) {
-	dateLayout := "January 2, 2006 -0700"
+func extractDate(articleData map[string]interface{}) (string, string) {
+	dateLayout := "2006-01-02T15:04:05.000Z"
 
-	date := fmt.Sprintf("%s +0000", strings.Replace(tag.Data, "Published ", "", 1))
+	date := ""
 
-	return dateLayout, date, nil
+	if value, ok := articleData["datePublished"]; ok {
+		if date, ok = value.(string); ok {
+			return dateLayout, date
+		}
+	}
+
+	return "", date
 }
 
-func extractDescription(tag *html.Node) string {
-	return tag.Data
+func extractDescription(articleData map[string]interface{}) string {
+	if value, ok := articleData["description"]; ok {
+		if description, ok := value.(string); ok {
+			return description
+		}
+	}
+
+	return ""
 }
 
-func extractCoverURL(tag *html.Node) string {
-	tagOfArticleCoverURL := tag.FirstChild.LastChild.PrevSibling
+func extractCoverURL(articleData map[string]interface{}) string {
+	if innerMap, ok := articleData["image"]; ok {
+		if innerMap, ok := innerMap.(map[string]interface{}); ok {
+			if value, ok := innerMap["url"]; ok {
+				if coverURL, ok := value.(string); ok {
+					return coverURL
+				}
+			}
+		}
+	}
 
-	tagAttr := tagOfArticleCoverURL.Attr[0].Val
-
-	return strings.Split(tagAttr, ",")[0]
+	return ""
 }
