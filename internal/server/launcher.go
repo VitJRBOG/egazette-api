@@ -8,6 +8,7 @@ import (
 	"egazette-api/internal/models"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -66,6 +67,23 @@ func logging(next http.Handler, infoLogger *log.Logger) http.Handler {
 		next.ServeHTTP(w, r)
 		timeElapsed := time.Since(begins)
 
-		infoLogger.Printf("[%s] %s %s", r.Method, r.RequestURI, timeElapsed)
+		ip, err := getIP(r)
+		if err != nil {
+			log.Println(err)
+		}
+		infoLogger.Printf("[%s] [%s] %s %s", ip, r.Method, r.RequestURI, timeElapsed)
 	})
+}
+
+func getIP(r *http.Request) (string, error) {
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return "", fmt.Errorf("failed to receive ip: %s", err)
+	}
+	netIP := net.ParseIP(ip)
+	if netIP != nil {
+		return ip, nil
+	}
+
+	return "no ip", fmt.Errorf("no valid IP found")
 }
