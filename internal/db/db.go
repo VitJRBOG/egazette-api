@@ -30,17 +30,40 @@ func NewConnection(dsn string) (Connection, error) {
 	}, nil
 }
 
-// InsertArticle inserts a new record into the "article" table.
-func InsertArticle(dbConn Connection, sourceName string, article models.Article) error {
-	query := "INSERT INTO article (url, pub_date, title, description, cover_url, add_date, source_id) " +
-		"SELECT $1, $2, $3, $4, $5, $6, (SELECT id FROM source WHERE name=$7) " +
-		"WHERE NOT EXISTS (SELECT id FROM article WHERE url=$1)"
+// InsertArticles inserts the new records into the "article" table.
+func InsertArticles(dbConn Connection, sourceAPIName string, articles []models.Article) error {
+	beginOfQuery := "INSERT INTO article (url, pub_date, title, description, cover_url, add_date, source_id) " +
+		"SELECT * FROM ("
+	endOfQuery := ") AS newarticle " +
+		"WHERE NOT EXISTS (" +
+		"SELECT id FROM article WHERE article.url = newarticle.url" +
+		")"
 
-	// FIXME: need to describe an inserting for the multiple records.
+	queryWithValues := ""
+	values := []interface{}{}
+	n := 1
 
-	_, err := dbConn.Conn.Exec(query,
-		article.URL, article.PubDate, article.Title, article.Description,
-		article.CoverURL, article.AddDate, sourceName)
+	for i, article := range articles {
+		a := fmt.Sprintf(
+			"SELECT $%d AS url, $%d AS pub_date, $%d AS title, $%d AS description, $%d AS cover_url, $%d AS add_date, "+
+				"(SELECT id FROM source WHERE api_name=$%d) AS source_id", n, n+1, n+2, n+3, n+4, n+5, n+6)
+		n += 7
+		queryWithValues += a
+		if i < len(articles)-1 {
+			queryWithValues += " UNION ALL "
+		}
+		values = append(values, article.URL, article.PubDate, article.Title, article.Description, article.CoverURL, article.AddDate,
+			sourceAPIName)
+	}
+
+	query := beginOfQuery + queryWithValues + endOfQuery
+
+	stmt, err := dbConn.Conn.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare the query: %s", err)
+	}
+
+	_, err = stmt.Exec(values...)
 	if err != nil {
 		return fmt.Errorf("failed to insert a record into the 'article' table: %s", err)
 	}

@@ -103,11 +103,9 @@ func harvestTheJPLArticles(dbConn db.Connection, sources []models.Source) error 
 		return err
 	}
 
-	for _, article := range articles {
-		err := db.InsertArticle(dbConn, source.Name, article)
-		if err != nil {
-			return err
-		}
+	err = db.InsertArticles(dbConn, source.APIName, articles)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -121,11 +119,9 @@ func harvestTheVestiramaArticles(dbConn db.Connection, sources []models.Source) 
 		return err
 	}
 
-	for _, article := range articles {
-		err := db.InsertArticle(dbConn, source.Name, article)
-		if err != nil {
-			return err
-		}
+	err = db.InsertArticles(dbConn, source.APIName, articles)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -139,11 +135,9 @@ func harvestTheNatGeoArticles(dbConn db.Connection, sources []models.Source) err
 		return err
 	}
 
-	for _, article := range articles {
-		err := db.InsertArticle(dbConn, source.Name, article)
-		if err != nil {
-			return err
-		}
+	err = db.InsertArticles(dbConn, source.APIName, articles)
+	if err != nil {
+		return err
 	}
 
 	return nil
