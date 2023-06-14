@@ -4,8 +4,6 @@ services:
       context: ./
       dockerfile: ./docker/psql/Dockerfile
     container_name: egazette-psql
-    ports:
-      - 5432:5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=qwe
