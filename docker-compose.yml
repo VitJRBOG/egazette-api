@@ -32,4 +32,4 @@ services:
     depends_on:
       psql:
         condition: service_healthy
-    command: bash -c "go mod download && go build -o ./app && find . -not -name 'app' -delete && ./app"
+    command: bash -c "./app"
