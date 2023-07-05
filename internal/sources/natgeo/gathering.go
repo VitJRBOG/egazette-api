@@ -5,6 +5,7 @@ import (
 	"egazette-api/internal/sources"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 	"time"
@@ -97,7 +98,15 @@ func extractDataFromArticlePage(article models.Article) (models.Article, error) 
 		return models.Article{}, err
 	}
 
-	tagOfArticleDate := sources.FindTag(htmlNode, "type", "application/ld+json").FirstChild
+	tagOfParentOfArticleDate := sources.FindTag(htmlNode, "type", "application/ld+json")
+	var tagOfArticleDate *html.Node
+
+	if tagOfParentOfArticleDate != nil {
+		tagOfArticleDate = tagOfParentOfArticleDate.FirstChild
+	} else {
+		log.Printf("an article data tag is empty: %s", article.URL)
+		return article, nil
+	}
 
 	articleData := map[string]interface{}{}
 	err = json.Unmarshal([]byte(tagOfArticleDate.Data), &articleData)
