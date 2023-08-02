@@ -92,6 +92,15 @@ func extractDate(tag *html.Node) (string, string) {
 	dateLayout := "January 2, 2006 -0700"
 	date := fmt.Sprintf("%s +0000", tag.Data)
 
+	switch {
+	case strings.Contains(date, "Aug.") || strings.Contains(date, "Oct.") ||
+		strings.Contains(date, "Nov.") || strings.Contains(date, "Dec.") ||
+		strings.Contains(date, "Jan.") || strings.Contains(date, "Feb."):
+		dateLayout = "Jan. 2, 2006 -0700"
+	case strings.Contains(date, "Sept."):
+		dateLayout = "Janu. 2, 2006 -0700"
+	}
+
 	return dateLayout, date
 }
 
