@@ -38,8 +38,8 @@ func handling(dbConn db.Connection, sources []models.Source) {
 	http.HandleFunc("/source", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			text := fmt.Sprintf("%s/source/jpl\n%s/source/vestirama",
-				r.Host, r.Host)
+			text := fmt.Sprintf("%s/source/jpl\n%s/source/vestirama\n%s/source/natgeo",
+				r.Host, r.Host, r.Host)
 
 			sendText(w, http.StatusOK, text)
 		default:
